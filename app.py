@@ -9,21 +9,32 @@ hand resolves and the app updates:
   - the true next-hand probabilities and the best bet (always Banker)
   - a "Pattern Watch" panel that flags your B-P-B-P chop, streaks, and zigzags
 
+It also has a built-in AUTO-DETECT bar:
+  - "Snip result area" opens a drag-to-select overlay to mark where the result
+    shows on your screen
+  - "Capture B/P/T" snaps one example of each outcome (teach by example)
+  - "Start detecting" watches that area and logs results for you automatically
+Auto-detect needs:  python -m pip install opencv-python mss numpy
+(The manual buttons work without those libraries.)
+
 Built with Tkinter, which ships inside Python -- no extra install needed.
 
 HONESTY NOTE shown in the UI:
 Baccarat hands are independent, so the probability of the next hand does NOT
 change based on past results. The pattern panel is there because you asked to
 track your B-P-B-P idea live; it shows what each system *would* bet, but the
-underlying odds stay the same (~50.68% Banker among non-tie hands). Treat the
-pattern signals as entertainment, not an edge.
+underlying odds stay the same (~50.68% Banker among non-tie hands). Auto-detect
+only saves you clicks; it does not provide an edge. Treat all signals as
+entertainment, not a winning system.
 """
 
 from __future__ import annotations
 
+import os
+import threading
 import tkinter as tk
-from tkinter import font as tkfont
-from typing import List
+from tkinter import font as tkfont, messagebox
+from typing import List, Optional
 
 from baccarat.engine import Outcome
 from baccarat.strategies import (
@@ -32,10 +43,23 @@ from baccarat.strategies import (
     make_chop_follow,
 )
 
+# Optional auto-detection. The app works fully without these; the detection
+# controls simply explain what to install if the libraries are missing.
+try:
+    from baccarat import vision
+    _VISION_IMPORT_OK = True
+except Exception:  # pragma: no cover - defensive
+    vision = None  # type: ignore
+    _VISION_IMPORT_OK = False
+
+CONFIG_PATH = "detector_config.json"
+TEMPLATE_DIR = "templates"
+
 
 # ---- Colors / theme (casino style, reads well on stream) ------------------ #
 BG = "#0b132b"          # deep navy background
 PANEL = "#1c2541"       # panel background
+PANEL2 = "#26314f"      # lighter panel / secondary button
 TEXT = "#e0e1dd"        # light text
 MUTED = "#8d99ae"       # muted text
 BANKER_C = "#e63946"    # red
@@ -59,13 +83,19 @@ class BaccaratApp:
         self._streak = make_follow_streak(3)
         self._chop = make_chop_follow(3)
 
+        # auto-detection state
+        self._region = None              # vision.Region once selected
+        self._detector_thread: Optional[threading.Thread] = None
+        self._detecting = False
+
         root.title("Baccarat Live Tracker")
         root.configure(bg=BG)
-        root.minsize(900, 620)
+        root.minsize(900, 700)
 
         self._fonts()
         self._build_header()
         self._build_body()
+        self._build_detect_bar()
         self._build_buttons()
         self.refresh()
 
@@ -139,6 +169,185 @@ class BaccaratApp:
             justify="left", wraplength=290,
         )
         self.pattern_lbl.pack(anchor="w", padx=14, pady=(0, 12))
+
+    def _build_detect_bar(self) -> None:
+        """Auto-detection controls embedded in the UI (snip + start/stop)."""
+        wrap = tk.Frame(self.root, bg=PANEL)
+        wrap.pack(fill="x", padx=20, pady=(0, 6))
+
+        row = tk.Frame(wrap, bg=PANEL)
+        row.pack(fill="x", padx=12, pady=10)
+
+        tk.Label(
+            row, text="Auto-detect", font=self.f_h2, fg=TEXT, bg=PANEL
+        ).pack(side="left", padx=(0, 12))
+
+        self.snip_btn = tk.Button(
+            row, text="SNIP RESULT AREA", font=self.f_small, bg=ACCENT, fg="#1a1a1a",
+            activebackground=ACCENT, relief="flat", bd=0, padx=12, pady=8,
+            command=self.on_snip, cursor="hand2",
+        )
+        self.snip_btn.pack(side="left", padx=4)
+
+        self.capture_btn = tk.Button(
+            row, text="CAPTURE B/P/T", font=self.f_small, bg=PANEL2, fg=TEXT,
+            activebackground=PANEL2, relief="flat", bd=0, padx=12, pady=8,
+            command=self.on_capture, cursor="hand2", state="disabled",
+        )
+        self.capture_btn.pack(side="left", padx=4)
+
+        self.detect_btn = tk.Button(
+            row, text="START DETECTING", font=self.f_small, bg=TIE_C, fg="white",
+            activebackground=TIE_C, relief="flat", bd=0, padx=12, pady=8,
+            command=self.on_toggle_detect, cursor="hand2", state="disabled",
+        )
+        self.detect_btn.pack(side="left", padx=4)
+
+        self.detect_status = tk.Label(
+            row, text="", font=self.f_small, fg=MUTED, bg=PANEL
+        )
+        self.detect_status.pack(side="left", padx=12)
+
+        self._set_detect_status()
+
+    def _set_detect_status(self, msg: Optional[str] = None) -> None:
+        if msg is not None:
+            self.detect_status.config(text=msg)
+            return
+        if not _VISION_IMPORT_OK or vision is None or not vision.deps_available():
+            self.detect_status.config(
+                text="Install once:  python -m pip install opencv-python mss numpy"
+            )
+            self.snip_btn.config(state="disabled")
+        elif self._region is None and not os.path.exists(CONFIG_PATH):
+            self.detect_status.config(text="Step 1: snip the result area.")
+        elif not self._templates_ready():
+            self.detect_status.config(text="Step 2: capture one B, P and T example.")
+        else:
+            self.detect_status.config(text="Ready. Press Start detecting.")
+
+    def _templates_ready(self) -> bool:
+        return all(
+            os.path.exists(os.path.join(TEMPLATE_DIR, f"{x}.png"))
+            for x in ("B", "P", "T")
+        )
+
+    # ---- detection actions ---------------------------------------------- #
+    def on_snip(self) -> None:
+        if not _VISION_IMPORT_OK or vision is None or not vision.deps_available():
+            messagebox.showinfo(
+                "Install required",
+                "Auto-detection needs extra libraries.\n\n"
+                "Run this once in a terminal:\n"
+                "    python -m pip install opencv-python mss numpy\n\n"
+                "Then reopen the app.",
+            )
+            return
+        try:
+            from baccarat.snipper import select_region
+        except Exception as exc:
+            messagebox.showerror("Snipping unavailable", str(exc))
+            return
+
+        # Hide our window so it doesn't cover the casino screen during selection.
+        self.root.withdraw()
+        self.root.update()
+        try:
+            region = select_region()
+        finally:
+            self.root.deiconify()
+
+        if region is None:
+            self._set_detect_status("Snip cancelled.")
+            return
+
+        self._region = region
+        os.makedirs(TEMPLATE_DIR, exist_ok=True)
+        config = vision.DetectorConfig(region=region, template_dir=TEMPLATE_DIR)
+        config.to_json(CONFIG_PATH)
+        self.capture_btn.config(state="normal")
+        self._set_detect_status(
+            f"Region saved ({region.width}x{region.height}). Now capture B/P/T."
+        )
+        self._maybe_enable_detect()
+
+    def on_capture(self) -> None:
+        """Capture one example each of Banker, Player, Tie from the live screen."""
+        if self._region is None:
+            if os.path.exists(CONFIG_PATH):
+                self._region = vision.DetectorConfig.from_json(CONFIG_PATH).region
+            else:
+                messagebox.showinfo("Snip first", "Select the result area first.")
+                return
+
+        for label, name in (("B", "BANKER"), ("P", "PLAYER"), ("T", "TIE")):
+            messagebox.showinfo(
+                f"Capture {name}",
+                f"Make sure a {name} result is showing on screen, then click OK.",
+            )
+            img = vision.grab(self._region)
+            os.makedirs(TEMPLATE_DIR, exist_ok=True)
+            vision.save_png(img, os.path.join(TEMPLATE_DIR, f"{label}.png"))
+
+        self._set_detect_status("Templates captured. Ready to detect.")
+        self._maybe_enable_detect()
+
+    def _maybe_enable_detect(self) -> None:
+        if self._templates_ready() and os.path.exists(CONFIG_PATH):
+            self.detect_btn.config(state="normal")
+
+    def on_toggle_detect(self) -> None:
+        if self._detecting:
+            self._detecting = False
+            self.detect_btn.config(text="START DETECTING", bg=TIE_C)
+            self._set_detect_status("Detection stopped.")
+            return
+
+        if not (self._templates_ready() and os.path.exists(CONFIG_PATH)):
+            messagebox.showinfo("Not ready", "Snip the area and capture B/P/T first.")
+            return
+
+        # Honest reminder before auto-detecting against a live feed.
+        messagebox.showwarning(
+            "Before you start",
+            "Auto-detection only saves clicks - it does NOT change the odds "
+            "(Banker stays ~50.68%).\n\nMany casinos forbid automated tools in "
+            "real-money play and may suspend accounts. Best used on demo or "
+            "play-money tables. You are responsible for following the rules.",
+        )
+
+        self._detecting = True
+        self.detect_btn.config(text="STOP DETECTING", bg=BANKER_C)
+        self._set_detect_status("Watching the screen...")
+        self._start_detector_thread()
+
+    def _start_detector_thread(self) -> None:
+        config = vision.DetectorConfig.from_json(CONFIG_PATH)
+        try:
+            detector = vision.ResultDetector(config)
+        except Exception as exc:
+            self._detecting = False
+            self.detect_btn.config(text="START DETECTING", bg=TIE_C)
+            messagebox.showerror("Detector error", str(exc))
+            return
+
+        label_map = {"B": Outcome.BANKER, "P": Outcome.PLAYER, "T": Outcome.TIE}
+
+        def on_result(label: str) -> None:
+            outcome = label_map.get(label)
+            if outcome is not None:
+                # Hop back to the UI thread to mutate state safely.
+                self.root.after(0, lambda: self.add(outcome))
+
+        def worker() -> None:
+            detector.run(
+                on_result,
+                stable_frames=2,
+                stop=lambda: not self._detecting,
+            )
+
+        self._detector_thread = threading.Thread(target=worker, daemon=True)
+        self._detector_thread.start()
 
     def _build_buttons(self) -> None:
         bar = tk.Frame(self.root, bg=BG)

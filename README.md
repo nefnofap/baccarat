@@ -34,9 +34,16 @@ It gives you:
 python app.py
 ```
 
-A simpler desktop window with the same buttons and a Pattern Watch panel. Uses
+A desktop window with the same buttons and a Pattern Watch panel. Uses
 Tkinter, which ships with Python — no extra install. On Windows use
 `python app.py` (not `python3`).
+
+It also includes a built-in **auto-detect bar**: click **Snip result area** to
+drag-select where the result shows on your screen, **Capture B/P/T** to teach it
+one example of each outcome, then **Start detecting** to log results
+automatically. Auto-detect needs the extra libraries
+(`python -m pip install opencv-python mss numpy`); the manual buttons work
+without them.
 
 ### Command-line analysis
 
@@ -57,7 +64,7 @@ comparison table.
 | `baccarat/systems.py` | Stateful betting systems with money management: Flat, Martingale, Paroli, Hong Kong Lady. |
 | `baccarat/backtest.py` | Runs strategies and systems over many shoes; reports ROI, risk of ruin, max stake. |
 | `tracker.html` | Self-contained web app for live use / OBS: scoreboards, live odds, card counting, signals. |
-| `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts. |
+| `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts, plus a built-in auto-detect bar (snip + capture + detect). |
 | `baccarat/vision.py` | Optional screen-capture + template-matching card/result detector (OpenCV). |
 | `baccarat/snipper.py` | Drag-to-select "snipping tool" overlay (Tkinter) for picking the screen region. |
 | `detect.py` | CLI to calibrate (snipping tool or manual) and run auto-detection from your screen. |
