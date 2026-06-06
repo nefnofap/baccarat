@@ -7,3 +7,9 @@ venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+
+# Auto-detection artifacts (calibrated per-machine, not shared)
+detector_config.json
+region_snapshot.png
+templates/

@@ -58,7 +58,40 @@ comparison table.
 | `baccarat/backtest.py` | Runs strategies and systems over many shoes; reports ROI, risk of ruin, max stake. |
 | `tracker.html` | Self-contained web app for live use / OBS: scoreboards, live odds, card counting, signals. |
 | `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts. |
+| `baccarat/vision.py` | Optional screen-capture + template-matching card/result detector (OpenCV). |
+| `detect.py` | CLI to calibrate and run auto-detection from your screen. |
 | `main.py` | Command-line demo tying it all together. |
+
+## Auto-detection from your screen (optional, advanced)
+
+`detect.py` can watch a region of your screen and log results automatically via
+template matching, so you don't have to click.
+
+**Please read before using:**
+- It does **not** improve your odds. It only saves clicks. Banker stays ~50.68%.
+- **Many casinos forbid automated tools in real-money play** and may close your
+  account / confiscate funds. Use it on demos, replays, or play-money tables.
+  You are responsible for following your casino's rules.
+
+**Setup:**
+```bash
+pip install opencv-python mss numpy        # extra libraries (one time)
+
+# 1. Capture the result area to a PNG so you can crop templates from it
+python detect.py --grab --left 800 --top 600 --width 240 --height 120
+
+# 2. Crop the Banker/Player/Tie indicators from region_snapshot.png and save
+#    them as templates/B.png, templates/P.png, templates/T.png
+
+# 3. Save your configuration
+python detect.py --save-config --left 800 --top 600 --width 240 --height 120
+
+# 4. Run live detection (prints each detected result + live odds)
+python detect.py --run
+```
+
+It must be calibrated to your specific screen and casino graphics — there is no
+universal detector.
 
 ## What the numbers show
 
