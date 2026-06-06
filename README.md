@@ -13,6 +13,21 @@ simulated shoes so you can compare them on **ROI**, not folklore.
 
 ## Quick start
 
+### Visual app (recommended for live use / streaming)
+
+```bash
+python app.py
+```
+
+Opens a desktop window with big BANKER / PLAYER / TIE buttons, a casino-style
+colored scoreboard, live odds, and a "Pattern Watch" panel that flags the
+B-P-B-P chop, streaks, and zigzags as you log each hand. Uses Tkinter, which
+ships with Python -- no extra install needed.
+
+On Windows use `python app.py` (not `python3`).
+
+### Command-line analysis
+
 ```bash
 python main.py
 ```
@@ -28,7 +43,8 @@ comparison table.
 | `baccarat/calculator.py` | `probabilities_from_remaining()` and `bet_expected_values()` — odds and EV from whatever cards are left. |
 | `baccarat/strategies.py` | Flat Banker, the B-P-B-P → Banker system, follow-the-streak (dragon), chop/zigzag. |
 | `baccarat/backtest.py` | Runs strategies over many shoes; reports wins, coverage, net units, ROI. |
-| `main.py` | Demo tying it all together. |
+| `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts. |
+| `main.py` | Command-line demo tying it all together. |
 
 ## What the numbers show
 
