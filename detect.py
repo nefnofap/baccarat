@@ -10,8 +10,15 @@ PLEASE READ
   your account closed. Use on demos / replays / play-money tables.
 * Requires extra libraries:  pip install opencv-python mss numpy
 
-USAGE
------
+EASIEST USAGE -- the snipping tool (recommended)
+------------------------------------------------
+       python detect.py --snip
+   A translucent overlay appears (like the Windows Snipping Tool). Drag a box
+   around the area where the result shows, press Enter, and it walks you through
+   capturing one example each of Banker, Player, and Tie. Then just run it.
+
+MANUAL USAGE (if you prefer typing coordinates)
+-----------------------------------------------
 1) Capture the result area so you can crop templates from it:
        python detect.py --grab --left 800 --top 600 --width 240 --height 120
    This saves 'region_snapshot.png'. Open it, crop the Banker/Player/Tie
@@ -20,11 +27,10 @@ USAGE
 2) Save your configuration:
        python detect.py --save-config --left 800 --top 600 --width 240 --height 120
 
-3) Run live detection (prints each detected result + live odds):
+RUN LIVE DETECTION (after either setup above)
+---------------------------------------------
        python detect.py --run
-
-Tip: find pixel coordinates with any screenshot tool, or use --grab on a guess
-and adjust until 'region_snapshot.png' tightly frames the result indicator.
+   Prints each detected result + live odds. Press Ctrl+C to stop.
 """
 
 from __future__ import annotations
@@ -127,9 +133,60 @@ def cmd_run(args) -> None:
         print(" ".join(history))
 
 
+def cmd_snip(args) -> None:
+    """Guided point-and-click calibration: drag a box, then teach B/P/T."""
+    vision = _need_vision()
+    try:
+        from baccarat.snipper import select_region
+    except Exception as exc:  # pragma: no cover - tkinter missing is rare
+        print(f"Could not open the snipping overlay: {exc}")
+        print("Falling back: use --grab/--save-config with manual coordinates.")
+        sys.exit(1)
+
+    print("Opening the snipping overlay -- drag a box around the RESULT area.")
+    print("(Tip: frame just the spot where B / P / T appears, then press Enter.)")
+    region = select_region()
+    if region is None:
+        print("Cancelled. No region selected.")
+        sys.exit(1)
+    print(
+        f"Selected region: left={region.left} top={region.top} "
+        f"width={region.width} height={region.height}"
+    )
+
+    os.makedirs(TEMPLATE_DIR, exist_ok=True)
+    config = vision.DetectorConfig(
+        region=region,
+        template_dir=TEMPLATE_DIR,
+        match_threshold=args.threshold,
+        poll_seconds=args.poll,
+        monitor_index=args.monitor,
+    )
+    config.to_json(CONFIG_PATH)
+    print(f"Saved configuration to {CONFIG_PATH}.\n")
+
+    # Teach-by-example: capture one frame per outcome from the live screen.
+    steps = [("B", "BANKER"), ("P", "PLAYER"), ("T", "TIE")]
+    print(
+        "Now we'll capture one example of each result. Get the casino screen to\n"
+        "show each outcome, then press Enter here to snap it. You can re-run\n"
+        "--snip any time to redo these.\n"
+    )
+    for label, name in steps:
+        input(f"  Show a {name} result on screen, then press Enter to capture... ")
+        img = vision.grab(region, args.monitor)
+        path = os.path.join(TEMPLATE_DIR, f"{label}.png")
+        vision.save_png(img, path)
+        print(f"    saved {path}")
+
+    print(
+        "\nCalibration complete. Start detecting with:\n"
+        "    python detect.py --run"
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Baccarat screen auto-detector.")
-    sub = p.add_subparsers(dest="mode", required=False)
 
     def add_region(sp):
         sp.add_argument("--left", type=int, default=0)
@@ -139,6 +196,8 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--monitor", type=int, default=1)
 
     # Flags style (so `python detect.py --grab ...` works as documented).
+    p.add_argument("--snip", action="store_true",
+                   help="drag-to-select region + guided template capture")
     p.add_argument("--grab", action="store_true", help="capture region to PNG")
     p.add_argument("--save-config", action="store_true", help="write config JSON")
     p.add_argument("--run", action="store_true", help="run live detection")
@@ -151,7 +210,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = build_parser().parse_args()
-    if args.grab:
+    if args.snip:
+        cmd_snip(args)
+    elif args.grab:
         cmd_grab(args)
     elif args.save_config:
         cmd_save_config(args)

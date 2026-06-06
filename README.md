@@ -59,7 +59,8 @@ comparison table.
 | `tracker.html` | Self-contained web app for live use / OBS: scoreboards, live odds, card counting, signals. |
 | `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts. |
 | `baccarat/vision.py` | Optional screen-capture + template-matching card/result detector (OpenCV). |
-| `detect.py` | CLI to calibrate and run auto-detection from your screen. |
+| `baccarat/snipper.py` | Drag-to-select "snipping tool" overlay (Tkinter) for picking the screen region. |
+| `detect.py` | CLI to calibrate (snipping tool or manual) and run auto-detection from your screen. |
 | `main.py` | Command-line demo tying it all together. |
 
 ## Auto-detection from your screen (optional, advanced)
@@ -73,20 +74,24 @@ template matching, so you don't have to click.
   account / confiscate funds. Use it on demos, replays, or play-money tables.
   You are responsible for following your casino's rules.
 
-**Setup:**
+**Setup (easiest — snipping tool):**
 ```bash
 pip install opencv-python mss numpy        # extra libraries (one time)
 
-# 1. Capture the result area to a PNG so you can crop templates from it
+# Drag-to-select the result area, then capture one example of B / P / T.
+# A translucent overlay appears like the Windows Snipping Tool.
+python detect.py --snip
+
+# Then run live detection (prints each detected result + live odds)
+python detect.py --run
+```
+
+The `--snip` overlay uses Tkinter (bundled with Python), so selecting the
+region needs no extra install. Picking pixels by hand still works too:
+
+```bash
 python detect.py --grab --left 800 --top 600 --width 240 --height 120
-
-# 2. Crop the Banker/Player/Tie indicators from region_snapshot.png and save
-#    them as templates/B.png, templates/P.png, templates/T.png
-
-# 3. Save your configuration
 python detect.py --save-config --left 800 --top 600 --width 240 --height 120
-
-# 4. Run live detection (prints each detected result + live odds)
 python detect.py --run
 ```
 
