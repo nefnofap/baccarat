@@ -61,7 +61,7 @@ comparison table.
 | `baccarat/engine.py` | Game rules: 8-deck shoe, card values, full third-card tableau, hand resolution. |
 | `baccarat/calculator.py` | `probabilities_from_remaining()` and `bet_expected_values()` — odds and EV from whatever cards are left. |
 | `baccarat/strategies.py` | Flat Banker, the B-P-B-P → Banker system, follow-the-streak (dragon), chop/zigzag. |
-| `baccarat/systems.py` | Stateful betting systems with money management: Flat, Martingale, Paroli, Hong Kong Lady. |
+| `baccarat/systems.py` | Stateful betting systems with money management: Flat, Martingale, Paroli, Hong Kong Lady, Hong Kong (Rafael). |
 | `baccarat/backtest.py` | Runs strategies and systems over many shoes; reports ROI, risk of ruin, max stake. |
 | `tracker.html` | Self-contained web app for live use / OBS: scoreboards, live odds, card counting, signals. |
 | `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts, plus a built-in auto-detect bar (snip + capture + detect). |
@@ -126,9 +126,14 @@ because baccarat hands are statistically independent.
 ## Betting systems & money management
 
 `baccarat/systems.py` implements full systems (which side **and** how much),
-including the popular **Hong Kong Lady** (sets of three, skip the 4th "dead
-hand", ignore ties, pattern-match marks, then bet the opposite with a
-Martingale). Backtested over 5,000 shoes with a 200-unit bankroll per session:
+including two **Hong Kong** variants:
+- **Hong Kong Lady** — sets of three, skip the 4th "dead hand", ignore ties,
+  pattern-match marks, then bet the opposite with a Martingale.
+- **Hong Kong (Rafael)** — Mister Rafael's version: a "three pattern" (must hold
+  ≥1 Banker and ≥1 Player), Check/X marks, a free hand each row, follow the most
+  recent symbol (no Martingale), and exit at +3 units or on double-opposites.
+
+Backtested over 5,000 shoes with a 200-unit bankroll per session:
 
 | System | Win% | ROI | Risk of Ruin | Worst Session |
 |--------|------|-----|--------------|---------------|
@@ -136,12 +141,13 @@ Martingale). Backtested over 5,000 shoes with a 200-unit bankroll per session:
 | Martingale Banker | 50.6% | -1.7% | **~21%** | **-129** |
 | Paroli Banker | 50.6% | -1.1% | 0% | -47 |
 | Hong Kong Lady | 50.2% | -0.5% | 0% | -21 |
+| Hong Kong (Rafael) | 50.1% | -1.0% | 0% | -2 |
 
 The takeaway: **money management changes the *shape* of results, not the edge.**
 Martingale produces many small wins but a real chance of catastrophic loss when
-a normal losing streak collides with your bankroll/table limit. Hong Kong Lady
-just bets fewer hands; its expectation is still negative. (Numbers vary slightly
-per run/seed.)
+a normal losing streak collides with your bankroll/table limit. Both Hong Kong
+variants just bet fewer hands with tight exits; their expectation is still
+negative. (Numbers vary slightly per run/seed.)
 
 ## The honest takeaways
 

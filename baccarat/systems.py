@@ -241,6 +241,127 @@ class HongKongLady(BettingSystem):
                 self.consumed_marks = len(self.marks)
 
 
+# --------------------------------------------------------------------------- #
+# Hong Kong Baccarat -- "Mister Rafael" version.
+# --------------------------------------------------------------------------- #
+
+class HongKongRafael(BettingSystem):
+    """Mister Rafael's Hong Kong Baccarat strategy.
+
+    Distinct from `HongKongLady`: no "dead hand" skip, no Martingale, and it
+    follows the most recent Check/X symbol instead of waiting for streaks.
+
+    Rules implemented (one clear reading of the published description):
+
+    SETUP -- the "three pattern"
+      * Ignore ties entirely (don't record; just re-bet next time).
+      * The first three non-tie results form the reference "three pattern".
+      * Diversity rule: that pattern must contain at least one Banker AND one
+        Player. If the first three are identical, wait for the first differing
+        result and use the last three non-tie results as the pattern.
+
+    MARKS
+      * After the pattern is set, record subsequent non-tie hands in rows of 3.
+        For each hand at position p (0,1,2) in its row, compare it to the
+        pattern's side at position p:
+            match  -> Check (True)
+            differ -> X     (False)
+
+    BETTING -- follow the last symbol
+      * The first hand of every row is a FREE HAND (no bet); we just read the
+        symbol it produced.
+      * For each subsequent hand, bet to repeat the most recent symbol:
+            bet for Check -> wager the pattern's side for THIS position
+            bet for X     -> wager the OPPOSITE of the pattern's side
+      * After a loss, keep following whatever symbol actually just occurred
+        (the most recent symbol), so the target can flip mid-row.
+
+    EXIT
+      * Profit target: stop betting once up 3-5 units this shoe (we use +3).
+      * Double-opposites safety: if the marks alternate for three in a row
+        (X,Check,X or Check,X,Check), stop betting for the rest of the shoe.
+    """
+
+    name = "Hong Kong (Rafael)"
+    description = (
+        "Three-pattern + follow-the-last-symbol (Check/X). Free hand each row, "
+        "exit at +3u or on double-opposites. No Martingale."
+    )
+
+    def __init__(self, base: float = 1.0, profit_target: float = 3.0) -> None:
+        self.base = base
+        self.profit_target = profit_target
+        self.reset()
+
+    def reset(self) -> None:
+        self.nt: List[Outcome] = []          # all non-tie results
+        self.pattern: Optional[List[Outcome]] = None
+        self.pattern_start = 0               # index in self.nt where rows begin
+        self.marks: List[bool] = []          # Check=True / X=False, post-pattern
+        self.last_symbol: Optional[bool] = None
+        self.profit = 0.0
+        self.stopped = False
+
+    # ---- helpers --------------------------------------------------------- #
+    def _row_position(self) -> int:
+        """Position (0,1,2) of the NEXT post-pattern hand within its row."""
+        return len(self.marks) % 3
+
+    def _pattern_side_at(self, pos: int) -> Outcome:
+        assert self.pattern is not None
+        return self.pattern[pos]
+
+    # ---- decision -------------------------------------------------------- #
+    def next_bet(self) -> PlacedBet:
+        if self.stopped or self.pattern is None or self.last_symbol is None:
+            return None
+        pos = self._row_position()
+        if pos == 0:
+            return None  # free hand at the start of each row -- no bet
+        # Bet to repeat the most recent symbol.
+        side = self._pattern_side_at(pos)
+        if self.last_symbol is True:        # betting for a Check
+            return (side, self.base)
+        return (_opposite(side), self.base)  # betting for an X
+
+    # ---- event ----------------------------------------------------------- #
+    def observe(self, outcome: Outcome, won: Optional[bool]) -> None:
+        # Track profit and exit on target. (Approximate: +1u win / -1u loss;
+        # the backtester computes exact net including Banker commission.)
+        if won is True:
+            self.profit += self.base
+        elif won is False:
+            self.profit -= self.base
+        if self.profit >= self.profit_target:
+            self.stopped = True
+
+        if outcome is Outcome.TIE:
+            return  # ignored; simply re-bet next hand
+
+        self.nt.append(outcome)
+
+        # Establish the three pattern (needs >=1 Banker and >=1 Player).
+        if self.pattern is None:
+            if len(self.nt) >= 3:
+                window = self.nt[-3:]
+                if Outcome.BANKER in window and Outcome.PLAYER in window:
+                    self.pattern = list(window)
+                    self.pattern_start = len(self.nt)
+            return
+
+        # Post-pattern: record this hand's mark.
+        pos = len(self.marks) % 3
+        symbol = outcome is self._pattern_side_at(pos)  # Check if matches
+        self.marks.append(symbol)
+        self.last_symbol = symbol
+
+        # Double-opposites safety: last three marks strictly alternate.
+        if len(self.marks) >= 3:
+            a, b, c = self.marks[-3], self.marks[-2], self.marks[-1]
+            if a != b and b != c:
+                self.stopped = True
+
+
 def default_systems(base: float = 1.0) -> List[BettingSystem]:
     """Representative set of systems for the bankroll backtester."""
     return [
@@ -248,4 +369,5 @@ def default_systems(base: float = 1.0) -> List[BettingSystem]:
         MartingaleBanker(base),
         ParoliBanker(base),
         HongKongLady(base),
+        HongKongRafael(base),
     ]
