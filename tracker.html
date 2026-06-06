@@ -195,6 +195,39 @@
     transition: all .15s ease; }
   .cardpad button:hover { border-color: var(--gold); transform: translateY(-1px); }
 
+  /* Rafael panel */
+  .raf-state { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .raf-call {
+    text-align: center; padding: 16px; border-radius: 16px; margin: 4px 0 14px;
+    border: 1px solid var(--glass-brd); background: var(--panel);
+    transition: all .25s ease;
+  }
+  .raf-call.bet { border-color: rgba(255,209,102,.5);
+    background: linear-gradient(180deg, rgba(255,209,102,.16), rgba(255,209,102,.04)); }
+  .raf-call.exit { border-color: rgba(255,77,94,.5);
+    background: linear-gradient(180deg, rgba(255,77,94,.16), rgba(255,77,94,.05)); }
+  .raf-call .lab { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted); }
+  .raf-call .who { font-size: 28px; font-weight: 900; letter-spacing: .5px; margin-top: 4px; }
+  .raf-call.bet .who { color: var(--gold); text-shadow: 0 0 18px rgba(255,209,102,.45); }
+  .raf-call.exit .who { color: var(--banker2); text-shadow: 0 0 18px rgba(255,77,94,.45); }
+  .raf-call .why { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .pat { display: inline-flex; gap: 5px; vertical-align: middle; }
+  .pat .cell {
+    width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+    font-size: 11px; font-weight: 800; color: #fff;
+  }
+  .pat .cell.B { background: linear-gradient(180deg, var(--banker2), var(--banker)); }
+  .pat .cell.P { background: linear-gradient(180deg, var(--player2), var(--player)); }
+  .marks { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .mk {
+    width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 14px; font-weight: 900; border: 1px solid var(--glass-brd);
+    animation: pop .25s ease;
+  }
+  .mk.chk { color: var(--tie2); background: rgba(31,209,168,.12); }
+  .mk.x { color: var(--banker2); background: rgba(255,77,94,.12); }
+  .mk.free { color: var(--muted); background: rgba(255,255,255,.04); border-style: dashed; }
+
   .kv { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; }
   .kv b { font-variant-numeric: tabular-nums; }
   .pos { color: var(--tie2); } .neg { color: var(--banker2); }
@@ -293,6 +326,20 @@
       </div>
 
       <div class="card">
+        <h2>Hong Kong (Rafael) panel</h2>
+        <div class="raf-state" id="rafState"></div>
+        <div class="raf-call" id="rafCall">
+          <div class="lab">Next move</div>
+          <div class="who" id="rafWho">&mdash;</div>
+          <div class="why" id="rafWhy"></div>
+        </div>
+        <div class="road-label" style="margin-bottom:4px">Marks (✓ match / ✗ differ)</div>
+        <div class="marks" id="rafMarks"></div>
+        <div class="kv"><span>Strategy P/L (flat 1u)</span><b id="rafPL">0.00</b></div>
+        <div class="note">Free hand starts each row of 3 (no bet). Then follow the last symbol. Exit at +3u or on double-opposites. Tracking aid only &mdash; it does not change the odds.</div>
+      </div>
+
+      <div class="card">
         <h2>Session P/L &mdash; flat 1u Banker</h2>
         <div class="kv"><span>Hands played</span><b id="plHands">0</b></div>
         <div class="kv"><span>Net units</span><b id="plNet">0.00</b></div>
@@ -335,7 +382,7 @@ function counts() {
 }
 
 // Render ---------------------------------------------------------------------
-function render() { drawBead(); drawBig(); drawStats(); drawOdds(); drawSignals(); drawPL(); }
+function render() { drawBead(); drawBig(); drawStats(); drawOdds(); drawSignals(); drawRafael(); drawPL(); }
 
 function drawBead() {
   const el = document.getElementById('bead');
@@ -461,6 +508,100 @@ function drawSignals() {
   signals.innerHTML = defs.map(([n,c]) => `
     <div class="sig ${c?'on':''}"><span class="dot"></span>${n}
     <span class="call">${c?'→ '+name(c):'—'}</span></div>`).join('');
+}
+
+// Hong Kong (Rafael) panel ---------------------------------------------------
+// Mirrors baccarat/systems.py HongKongRafael: three-pattern (>=1 B and >=1 P),
+// Check/X marks, free hand each row, follow the most recent symbol, exit at
+// +3 units or on double-opposites (alternating marks). Tracking aid only.
+function rafaelState() {
+  const nt = nonTie();
+  const opp = s => (s === 'B' ? 'P' : 'B');
+
+  // 1) Establish the three pattern: first 3 non-tie with >=1 B and >=1 P.
+  let pattern = null, start = 0;
+  for (let i = 0; i + 3 <= nt.length; i++) {
+    const w = nt.slice(i, i + 3);
+    if (w.includes('B') && w.includes('P')) { pattern = w; start = i + 3; break; }
+  }
+  if (!pattern) {
+    return { pattern: null, marks: [], call: null, why: 'Waiting for a 3-pattern with both Banker and Player.', exit: false, pl: 0 };
+  }
+
+  // 2) Marks for each post-pattern hand vs the pattern position in its row.
+  const post = nt.slice(start);
+  const marks = [];               // {sym:'chk'|'x'|'free', side:'B'|'P'}
+  let exit = false, exitWhy = '';
+  let pl = 0;
+  for (let k = 0; k < post.length; k++) {
+    const pos = k % 3;
+    const isCheck = post[k] === pattern[pos];
+    // Settle a bet that would have been placed on this hand (pos>0, following
+    // the previous symbol) for the strategy P/L readout.
+    if (pos !== 0 && marks.length > 0 && !exit) {
+      const prev = marks[marks.length - 1];
+      const wantCheck = prev.sym === 'chk';
+      pl += (wantCheck === isCheck) ? 0.95 : -1; // ~Banker-ish payout approx
+    }
+    marks.push({ sym: pos === 0 ? 'free' : (isCheck ? 'chk' : 'x'),
+                 realChk: isCheck });
+    // Mark position 0 also carries a real symbol for "follow" purposes.
+    marks[marks.length - 1].symReal = isCheck ? 'chk' : 'x';
+    // Double-opposites: last three real symbols strictly alternate.
+    if (marks.length >= 3) {
+      const a = marks[marks.length-3].realChk,
+            b = marks[marks.length-2].realChk,
+            c = marks[marks.length-1].realChk;
+      if (a !== b && b !== c) { exit = true; exitWhy = 'Double-opposites detected.'; }
+    }
+    if (pl >= 3 && !exit) { exit = true; exitWhy = 'Reached +3 unit profit target.'; }
+  }
+
+  // 3) Decide the next move.
+  const nextPos = post.length % 3;
+  let call = null, why = '';
+  if (exit) {
+    why = exitWhy + ' Walk away from this shoe.';
+  } else if (nextPos === 0) {
+    why = 'Free hand (start of a new row) — do not bet, just watch.';
+  } else if (marks.length > 0) {
+    const prev = marks[marks.length - 1];
+    const wantCheck = prev.symReal === 'chk';
+    const side = wantCheck ? pattern[nextPos] : opp(pattern[nextPos]);
+    call = side;
+    why = `Follow last ${wantCheck ? '✓' : '✗'} → bet for a ${wantCheck ? 'Check' : 'X'} `
+        + `(pattern pos ${nextPos+1} is ${pattern[nextPos]}).`;
+  }
+  return { pattern, marks, call, why, exit, pl };
+}
+
+function drawRafael() {
+  const st = rafaelState();
+  const patHtml = st.pattern
+    ? '<span class="pat">' + st.pattern.map(s => `<span class="cell ${s}">${s}</span>`).join('') + '</span>'
+    : '<i>not set</i>';
+  rafState.innerHTML = `Three-pattern: ${patHtml}`;
+
+  const callEl = document.getElementById('rafCall');
+  callEl.className = 'raf-call' + (st.exit ? ' exit' : (st.call ? ' bet' : ''));
+  if (st.exit) {
+    rafWho.textContent = 'EXIT SHOE';
+  } else if (st.call) {
+    rafWho.textContent = 'BET ' + name(st.call);
+  } else {
+    rafWho.textContent = st.pattern && (st.marks.length % 3 === 0) ? 'FREE HAND' : '—';
+  }
+  rafWhy.textContent = st.why;
+
+  rafMarks.innerHTML = st.marks.length
+    ? st.marks.map(m => {
+        if (m.sym === 'free') return `<div class="mk free" title="free hand">·</div>`;
+        return m.sym === 'chk' ? `<div class="mk chk">✓</div>` : `<div class="mk x">✗</div>`;
+      }).join('')
+    : '<span class="note" style="margin:0">No marks yet.</span>';
+
+  rafPL.textContent = (st.pl >= 0 ? '+' : '') + st.pl.toFixed(2);
+  rafPL.className = st.pl >= 0 ? 'pos' : 'neg';
 }
 
 // Session P/L ----------------------------------------------------------------
