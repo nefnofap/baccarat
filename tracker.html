@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Baccarat Live Tracker</title>
+<style>
+  :root {
+    --bg0: #05070f;
+    --bg1: #0a0f1f;
+    --glass: rgba(22, 30, 54, 0.55);
+    --glass-brd: rgba(120, 140, 200, 0.16);
+    --panel: rgba(17, 24, 44, 0.72);
+    --ink: #eef2ff;
+    --muted: #8893b5;
+    --faint: #5b6280;
+    --banker: #ff4d5e;
+    --banker2: #ff8a94;
+    --player: #4d8dff;
+    --player2: #8fb6ff;
+    --tie: #1fd1a8;
+    --tie2: #74efd2;
+    --gold: #ffd166;
+    --shadow: 0 20px 60px rgba(0,0,0,.55);
+  }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 600px at 12% -8%, #15224a 0%, transparent 55%),
+      radial-gradient(1100px 700px at 95% 0%, #2a1336 0%, transparent 50%),
+      radial-gradient(800px 800px at 50% 120%, #06283a 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg0));
+    background-attachment: fixed;
+    min-height: 100%;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 22px 22px 40px; }
+
+  /* Header */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 18px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 52px; height: 52px; border-radius: 16px; position: relative;
+    background: conic-gradient(from 210deg, var(--banker), var(--gold), var(--player), var(--tie), var(--banker));
+    box-shadow: 0 8px 30px rgba(255,77,94,.35), inset 0 0 0 1px rgba(255,255,255,.15);
+    animation: spin 14s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .logo::after {
+    content: "B"; position: absolute; inset: 6px; border-radius: 11px;
+    background: #0a0f1f; display: grid; place-items: center;
+    font-weight: 900; font-size: 22px; color: var(--gold);
+    box-shadow: inset 0 0 12px rgba(0,0,0,.6);
+  }
+  h1 { margin: 0; font-size: 24px; letter-spacing: .6px; font-weight: 800; }
+  h1 em { color: var(--gold); font-style: normal; }
+  .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .banner {
+    font-size: 11.5px; color: #ffd9b0; background: rgba(255,120,80,.10);
+    border: 1px solid rgba(255,150,90,.25); padding: 9px 13px; border-radius: 12px;
+    max-width: 430px; line-height: 1.5;
+  }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid var(--glass-brd);
+    border-radius: 20px; padding: 18px; box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 18px; }
+  .card h2 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--muted); margin: 0 0 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 10px var(--gold);
+  }
+
+  /* Roads */
+  .roads { display: grid; gap: 14px; }
+  .road {
+    background: rgba(6,10,22,.6); border: 1px solid var(--glass-brd);
+    border-radius: 14px; padding: 12px; overflow-x: auto;
+    background-image:
+      linear-gradient(rgba(120,140,200,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,140,200,.06) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  .road-label { font-size: 10.5px; color: var(--muted); margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 1.2px; }
+  .beadgrid, .bigroad {
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(6, 30px);
+    grid-auto-columns: 30px; gap: 3px; min-height: 192px;
+  }
+  .bead {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12px; font-weight: 800;
+    color: #fff; box-shadow: inset 0 -2px 6px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.3);
+    animation: pop .25s ease;
+  }
+  @keyframes pop { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .b-bg { background: radial-gradient(circle at 34% 28%, var(--banker2), var(--banker)); }
+  .p-bg { background: radial-gradient(circle at 34% 28%, var(--player2), var(--player)); }
+  .t-bg { background: radial-gradient(circle at 34% 28%, var(--tie2), var(--tie)); }
+  .ring {
+    width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--banker);
+    background: transparent; animation: pop .25s ease;
+  }
+  .ring.p { border-color: var(--player); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 14px; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--glass-brd);
+    border-radius: 14px; padding: 12px 14px; position: relative; overflow: hidden;
+  }
+  .stat .n { font-size: 26px; font-weight: 900; line-height: 1; }
+  .stat .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; margin-top: 6px; }
+  .stat.b .n { color: var(--banker2); } .stat.p .n { color: var(--player2); }
+  .stat.t .n { color: var(--tie2); }
+
+  /* Buttons */
+  .btns { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px; }
+  .btns .row2 { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  button.action {
+    border: none; border-radius: 16px; padding: 20px; font-size: 19px; font-weight: 800;
+    color: #fff; cursor: pointer; letter-spacing: .6px; position: relative;
+    transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  }
+  button.action:active { transform: translateY(3px) scale(.99); }
+  .bk { background: linear-gradient(180deg, var(--banker2), var(--banker));
+    box-shadow: 0 10px 28px rgba(255,77,94,.38); }
+  .pl { background: linear-gradient(180deg, var(--player2), var(--player));
+    box-shadow: 0 10px 28px rgba(77,141,255,.38); }
+  .ti { background: linear-gradient(180deg, var(--tie2), var(--tie));
+    box-shadow: 0 10px 28px rgba(31,209,168,.34); }
+  .bk:hover,.pl:hover,.ti:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .ghost { background: rgba(255,255,255,.05); border: 1px solid var(--glass-brd);
+    color: var(--ink); box-shadow: none; }
+  .ghost:hover { background: rgba(255,255,255,.1); }
+
+  /* Odds */
+  .odds-row { display: flex; justify-content: space-between; font-size: 14px;
+    margin-bottom: 4px; align-items: baseline; }
+  .odds-row b { font-size: 16px; }
+  .bar { height: 13px; border-radius: 8px; background: rgba(255,255,255,.06);
+    overflow: hidden; margin: 2px 0 14px; }
+  .bar > span { display: block; height: 100%; border-radius: 8px;
+    transition: width .5s cubic-bezier(.2,.7,.2,1); }
+  .bestbet {
+    text-align: center; padding: 16px; border-radius: 16px; margin-top: 6px;
+    background: linear-gradient(180deg, rgba(255,77,94,.16), rgba(255,77,94,.05));
+    border: 1px solid rgba(255,77,94,.3);
+  }
+  .bestbet .who { font-size: 34px; font-weight: 900; color: var(--banker2);
+    letter-spacing: 1px; text-shadow: 0 0 22px rgba(255,77,94,.5); }
+  .bestbet .lab, .bestbet .edge { font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1.3px; }
+
+  /* Signals */
+  .sig { display: flex; align-items: center; gap: 10px; padding: 11px 13px;
+    border-radius: 12px; background: var(--panel); border: 1px solid var(--glass-brd);
+    margin-bottom: 9px; font-size: 13.5px; transition: all .2s ease; }
+  .sig .dot { width: 9px; height: 9px; border-radius: 50%; background: #46506e; flex: none; }
+  .sig .call { margin-left: auto; font-weight: 800; color: var(--muted); }
+  .sig.on { border-color: rgba(255,209,102,.55);
+    background: linear-gradient(180deg, rgba(255,209,102,.14), rgba(255,209,102,.04)); }
+  .sig.on .dot { background: var(--gold); box-shadow: 0 0 12px var(--gold); animation: pulse 1.3s infinite; }
+  .sig.on .call { color: var(--gold); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  /* Mode toggle + card pad */
+  .mode { display: flex; gap: 8px; margin-bottom: 12px; }
+  .mode button { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--glass-brd);
+    background: var(--panel); color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 700;
+    transition: all .2s ease; }
+  .mode button.sel { color: #06121f; background: var(--gold); border-color: var(--gold); }
+  .cardpad { display: grid; grid-template-columns: repeat(5,1fr); gap: 7px; }
+  .cardpad button { padding: 12px 0; border-radius: 10px; border: 1px solid var(--glass-brd);
+    background: var(--panel); color: var(--ink); font-weight: 800; cursor: pointer; font-size: 15px;
+    transition: all .15s ease; }
+  .cardpad button:hover { border-color: var(--gold); transform: translateY(-1px); }
+
+  /* Rafael panel */
+  .raf-state { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .raf-call {
+    text-align: center; padding: 16px; border-radius: 16px; margin: 4px 0 14px;
+    border: 1px solid var(--glass-brd); background: var(--panel);
+    transition: all .25s ease;
+  }
+  .raf-call.bet { border-color: rgba(255,209,102,.5);
+    background: linear-gradient(180deg, rgba(255,209,102,.16), rgba(255,209,102,.04)); }
+  .raf-call.exit { border-color: rgba(255,77,94,.5);
+    background: linear-gradient(180deg, rgba(255,77,94,.16), rgba(255,77,94,.05)); }
+  .raf-call .lab { font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted); }
+  .raf-call .who { font-size: 28px; font-weight: 900; letter-spacing: .5px; margin-top: 4px; }
+  .raf-call.bet .who { color: var(--gold); text-shadow: 0 0 18px rgba(255,209,102,.45); }
+  .raf-call.exit .who { color: var(--banker2); text-shadow: 0 0 18px rgba(255,77,94,.45); }
+  .raf-call .why { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .pat { display: inline-flex; gap: 5px; vertical-align: middle; }
+  .pat .cell {
+    width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+    font-size: 11px; font-weight: 800; color: #fff;
+  }
+  .pat .cell.B { background: linear-gradient(180deg, var(--banker2), var(--banker)); }
+  .pat .cell.P { background: linear-gradient(180deg, var(--player2), var(--player)); }
+  .marks { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .mk {
+    width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 14px; font-weight: 900; border: 1px solid var(--glass-brd);
+    animation: pop .25s ease;
+  }
+  .mk.chk { color: var(--tie2); background: rgba(31,209,168,.12); }
+  .mk.x { color: var(--banker2); background: rgba(255,77,94,.12); }
+  .mk.free { color: var(--muted); background: rgba(255,255,255,.04); border-style: dashed; }
+
+  .kv { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; }
+  .kv b { font-variant-numeric: tabular-nums; }
+  .pos { color: var(--tie2); } .neg { color: var(--banker2); }
+  .note { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 12px; }
+  .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 22px; line-height: 1.6; }
+  kbd { background: rgba(255,255,255,.08); border: 1px solid var(--glass-brd); border-radius: 6px;
+    padding: 1px 7px; font-size: 11px; font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>BACCARAT <em>LIVE TRACKER</em></h1>
+        <div class="sub">Big Road &amp; Bead Plate &middot; live odds &middot; strategy signals &middot; card counting</div>
+      </div>
+    </div>
+    <div class="banner">
+      Hands are independent &mdash; past results don't change the next hand
+      (~50.68% Banker, non-tie). Signals are for tracking, <b>not</b> an edge.
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT -->
+    <div>
+      <div class="card">
+        <h2>Scoreboard</h2>
+        <div class="roads">
+          <div class="road">
+            <div class="road-label">Bead Plate &mdash; every result</div>
+            <div id="bead" class="beadgrid"></div>
+          </div>
+          <div class="road">
+            <div class="road-label">Big Road &mdash; Banker/Player columns (ties skipped)</div>
+            <div id="big" class="bigroad"></div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat b"><div class="n" id="cB">0</div><div class="l">Banker</div></div>
+          <div class="stat p"><div class="n" id="cP">0</div><div class="l">Player</div></div>
+          <div class="stat t"><div class="n" id="cT">0</div><div class="l">Tie</div></div>
+          <div class="stat"><div class="n" id="cN">0</div><div class="l">Total</div></div>
+        </div>
+        <div class="btns">
+          <button class="action bk" onclick="add('B')">BANKER</button>
+          <button class="action pl" onclick="add('P')">PLAYER</button>
+          <button class="action ti" onclick="add('T')">TIE</button>
+          <div class="row2">
+            <button class="action ghost" onclick="undo()">UNDO</button>
+            <button class="action ghost" onclick="resetAll()">RESET</button>
+          </div>
+        </div>
+        <div class="note">Keyboard: <kbd>B</kbd> Banker &middot; <kbd>P</kbd> Player &middot; <kbd>T</kbd> Tie &middot; <kbd>U</kbd> Undo</div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <div class="card">
+        <h2>Next-hand odds</h2>
+        <div id="oddsBox"></div>
+        <div class="bestbet">
+          <div class="lab">Lowest-edge bet</div>
+          <div class="who">BANKER</div>
+          <div class="edge">House edge 1.06% &middot; Player 1.24% &middot; Tie ~14%</div>
+        </div>
+        <div class="note" id="countNote"></div>
+      </div>
+
+      <div class="card">
+        <h2>Card-count mode</h2>
+        <div class="mode">
+          <button id="mPattern" class="sel" onclick="setMode('pattern')">Pattern only</button>
+          <button id="mCount" onclick="setMode('count')">Track cards</button>
+        </div>
+        <div id="countPanel" style="display:none">
+          <div class="note" style="margin-top:0">Tap each card as it's dealt to recompute true odds from the remaining 8-deck shoe. <b>0</b> = 10/J/Q/K.</div>
+          <div class="cardpad" style="margin-top:10px">
+            <button onclick="useCard(0)">0</button><button onclick="useCard(1)">A</button>
+            <button onclick="useCard(2)">2</button><button onclick="useCard(3)">3</button>
+            <button onclick="useCard(4)">4</button><button onclick="useCard(5)">5</button>
+            <button onclick="useCard(6)">6</button><button onclick="useCard(7)">7</button>
+            <button onclick="useCard(8)">8</button><button onclick="useCard(9)">9</button>
+          </div>
+          <div class="kv"><span>Cards remaining</span><b id="remain">416</b></div>
+          <button class="action ghost" style="width:100%;margin-top:12px;padding:12px;font-size:14px" onclick="recompute()">Recompute odds</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Strategy signals</h2>
+        <div id="signals"></div>
+      </div>
+
+      <div class="card">
+        <h2>Hong Kong (Rafael) panel</h2>
+        <div class="raf-state" id="rafState"></div>
+        <div class="raf-call" id="rafCall">
+          <div class="lab">Next move</div>
+          <div class="who" id="rafWho">&mdash;</div>
+          <div class="why" id="rafWhy"></div>
+        </div>
+        <div class="road-label" style="margin-bottom:4px">Marks (✓ match / ✗ differ)</div>
+        <div class="marks" id="rafMarks"></div>
+        <div class="kv"><span>Strategy P/L (flat 1u)</span><b id="rafPL">0.00</b></div>
+        <div class="note">Free hand starts each row of 3 (no bet). Then follow the last symbol. Exit at +3u or on double-opposites. Tracking aid only &mdash; it does not change the odds.</div>
+      </div>
+
+      <div class="card">
+        <h2>Session P/L &mdash; flat 1u Banker</h2>
+        <div class="kv"><span>Hands played</span><b id="plHands">0</b></div>
+        <div class="kv"><span>Net units</span><b id="plNet">0.00</b></div>
+        <div class="note">What flat-betting 1 unit on Banker every hand would have returned for the results you logged (5% commission on Banker wins).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    For entertainment &amp; analysis only. No betting system overcomes the baccarat house edge. Please play responsibly.
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+let history = [];
+let mode = 'pattern';
+let remaining = freshShoe();
+const BASE_ODDS = { B: 0.4586, P: 0.4462, T: 0.0952 };
+let odds = { ...BASE_ODDS };
+
+function freshShoe() {
+  const c = new Array(10).fill(0);
+  c[0] = 8 * 16;                       // 10/J/Q/K
+  for (let v = 1; v <= 9; v++) c[v] = 8 * 4;
+  return c;
+}
+
+// Logging --------------------------------------------------------------------
+function add(r) { history.push(r); render(); }
+function undo() { history.pop(); render(); }
+function resetAll() { history = []; remaining = freshShoe(); odds = { ...BASE_ODDS }; render(); }
+
+function counts() {
+  return {
+    B: history.filter(x => x === 'B').length,
+    P: history.filter(x => x === 'P').length,
+    T: history.filter(x => x === 'T').length,
+  };
+}
+
+// Render ---------------------------------------------------------------------
+function render() { drawBead(); drawBig(); drawStats(); drawOdds(); drawSignals(); drawRafael(); drawPL(); }
+
+function drawBead() {
+  const el = document.getElementById('bead');
+  el.innerHTML = '';
+  for (const r of history) {
+    const d = document.createElement('div');
+    d.className = 'bead ' + (r === 'B' ? 'b-bg' : r === 'P' ? 'p-bg' : 't-bg');
+    d.textContent = r;
+    el.appendChild(d);
+  }
+}
+
+function drawBig() {
+  const el = document.getElementById('big');
+  el.innerHTML = '';
+  const seq = history.filter(x => x === 'B' || x === 'P');
+  let col = -1, row = 0, last = null;
+  for (const r of seq) {
+    if (r === last) { row = Math.min(row + 1, 5); }
+    else { col++; row = 0; last = r; }
+    const d = document.createElement('div');
+    d.className = 'ring' + (r === 'P' ? ' p' : '');
+    d.style.gridColumnStart = col + 1;
+    d.style.gridRowStart = row + 1;
+    el.appendChild(d);
+  }
+}
+
+function drawStats() {
+  const c = counts();
+  cB.textContent = c.B; cP.textContent = c.P; cT.textContent = c.T; cN.textContent = history.length;
+}
+
+function drawOdds() {
+  const rows = [['Banker','B','linear-gradient(90deg,#ff8a94,#ff4d5e)'],
+                ['Player','P','linear-gradient(90deg,#8fb6ff,#4d8dff)'],
+                ['Tie','T','linear-gradient(90deg,#74efd2,#1fd1a8)']];
+  oddsBox.innerHTML = rows.map(([n,k,g]) => `
+    <div class="odds-row"><span>${n}</span><b>${(odds[k]*100).toFixed(2)}%</b></div>
+    <div class="bar"><span style="width:${(odds[k]*100).toFixed(1)}%;background:${g}"></span></div>`).join('');
+}
+
+// Card-count mode ------------------------------------------------------------
+function setMode(m) {
+  mode = m;
+  mPattern.classList.toggle('sel', m === 'pattern');
+  mCount.classList.toggle('sel', m === 'count');
+  countPanel.style.display = m === 'count' ? 'block' : 'none';
+  countNote.textContent = m === 'count'
+    ? 'Odds are computed live from the cards still in the shoe.'
+    : 'Showing baseline fresh-shoe odds. Switch to "Track cards" for live counting.';
+}
+function useCard(v) { if (remaining[v] > 0) remaining[v]--; remain.textContent = remaining.reduce((a,b)=>a+b,0); }
+function total(v) { return v.reduce((a,b)=>a+b,0) % 10; }
+
+function resolveCoup(draw) {
+  const pl = [draw(), draw()], bk = [draw(), draw()];
+  let p = total(pl), b = total(bk);
+  if (p < 8 && b < 8) {
+    let p3 = null;
+    if (p <= 5) { p3 = draw(); pl.push(p3); p = total(pl); }
+    let bd;
+    if (p3 === null) bd = b <= 5;
+    else if (b <= 2) bd = true;
+    else if (b === 3) bd = p3 !== 8;
+    else if (b === 4) bd = p3 >= 2 && p3 <= 7;
+    else if (b === 5) bd = p3 >= 4 && p3 <= 7;
+    else if (b === 6) bd = p3 === 6 || p3 === 7;
+    else bd = false;
+    if (bd) { bk.push(draw()); b = total(bk); }
+  }
+  return p > b ? 'P' : (b > p ? 'B' : 'T');
+}
+
+function recompute() {
+  const pool = [];
+  for (let v = 0; v < 10; v++) for (let i = 0; i < remaining[v]; i++) pool.push(v);
+  if (pool.length < 6) { alert('Not enough cards left in the shoe.'); return; }
+  const trials = 40000; let B=0,P=0,T=0;
+  for (let t = 0; t < trials; t++) {
+    for (let i = 0; i < 6 && i < pool.length; i++) {
+      const j = i + Math.floor(Math.random() * (pool.length - i));
+      const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+    }
+    let idx = 0; const draw = () => pool[idx++];
+    const r = resolveCoup(draw);
+    if (r === 'B') B++; else if (r === 'P') P++; else T++;
+  }
+  odds = { B: B/trials, P: P/trials, T: T/trials };
+  drawOdds();
+}
+
+// Signals --------------------------------------------------------------------
+function nonTie() { return history.filter(x => x !== 'T'); }
+function sigBPBP() { const h = nonTie(); return h.length >= 4 && h.slice(-4).join('') === 'BPBP' ? 'B' : null; }
+function sigStreak(m=3) { const h = nonTie(); if (h.length < m) return null; const l = h[h.length-1];
+  return h.slice(-m).every(x => x === l) ? l : null; }
+function sigChop(m=3) { const h = nonTie(); if (h.length < m+1) return null; const w = h.slice(-(m+1));
+  for (let i=1;i<w.length;i++) if (w[i]===w[i-1]) return null; return w[w.length-1]==='B'?'P':'B'; }
+function sigHKL() {
+  const nt = nonTie(); const live = []; let n = 0;
+  for (const r of nt) { if (n % 4 !== 3) live.push(r); n++; }
+  if (live.length < 6) return null;
+  let ref = null; const marks = [];
+  for (let i = 0; i + 3 <= live.length; i += 3) {
+    const s = live.slice(i, i+3);
+    if (ref === null) { if (new Set(s).size > 1) ref = s; continue; }
+    for (let j=0;j<3;j++) marks.push(s[j] === ref[j]);
+  }
+  if (marks.length < 3) return null;
+  const m = marks.slice(-3);
+  return (m[0]===m[1]&&m[1]===m[2]) ? (live[live.length-1]==='B'?'P':'B') : null;
+}
+function name(s){ return s==='B'?'BANKER':s==='P'?'PLAYER':'TIE'; }
+
+function drawSignals() {
+  const defs = [
+    ['B-P-B-P chop (your system)', sigBPBP()],
+    ['Follow streak (Dragon 3+)', sigStreak(3)],
+    ['Chop / zigzag (3+)', sigChop(3)],
+    ['Hong Kong Lady', sigHKL()],
+  ];
+  signals.innerHTML = defs.map(([n,c]) => `
+    <div class="sig ${c?'on':''}"><span class="dot"></span>${n}
+    <span class="call">${c?'→ '+name(c):'—'}</span></div>`).join('');
+}
+
+// Hong Kong (Rafael) panel ---------------------------------------------------
+// Mirrors baccarat/systems.py HongKongRafael: three-pattern (>=1 B and >=1 P),
+// Check/X marks, free hand each row, follow the most recent symbol, exit at
+// +3 units or on double-opposites (alternating marks). Tracking aid only.
+function rafaelState() {
+  const nt = nonTie();
+  const opp = s => (s === 'B' ? 'P' : 'B');
+
+  // 1) Establish the three pattern: first 3 non-tie with >=1 B and >=1 P.
+  let pattern = null, start = 0;
+  for (let i = 0; i + 3 <= nt.length; i++) {
+    const w = nt.slice(i, i + 3);
+    if (w.includes('B') && w.includes('P')) { pattern = w; start = i + 3; break; }
+  }
+  if (!pattern) {
+    return { pattern: null, marks: [], call: null, why: 'Waiting for a 3-pattern with both Banker and Player.', exit: false, pl: 0 };
+  }
+
+  // 2) Marks for each post-pattern hand vs the pattern position in its row.
+  const post = nt.slice(start);
+  const marks = [];               // {sym:'chk'|'x'|'free', side:'B'|'P'}
+  let exit = false, exitWhy = '';
+  let pl = 0;
+  for (let k = 0; k < post.length; k++) {
+    const pos = k % 3;
+    const isCheck = post[k] === pattern[pos];
+    // Settle a bet that would have been placed on this hand (pos>0, following
+    // the previous symbol) for the strategy P/L readout.
+    if (pos !== 0 && marks.length > 0 && !exit) {
+      const prev = marks[marks.length - 1];
+      const wantCheck = prev.sym === 'chk';
+      pl += (wantCheck === isCheck) ? 0.95 : -1; // ~Banker-ish payout approx
+    }
+    marks.push({ sym: pos === 0 ? 'free' : (isCheck ? 'chk' : 'x'),
+                 realChk: isCheck });
+    // Mark position 0 also carries a real symbol for "follow" purposes.
+    marks[marks.length - 1].symReal = isCheck ? 'chk' : 'x';
+    // Double-opposites: last three real symbols strictly alternate.
+    if (marks.length >= 3) {
+      const a = marks[marks.length-3].realChk,
+            b = marks[marks.length-2].realChk,
+            c = marks[marks.length-1].realChk;
+      if (a !== b && b !== c) { exit = true; exitWhy = 'Double-opposites detected.'; }
+    }
+    if (pl >= 3 && !exit) { exit = true; exitWhy = 'Reached +3 unit profit target.'; }
+  }
+
+  // 3) Decide the next move.
+  const nextPos = post.length % 3;
+  let call = null, why = '';
+  if (exit) {
+    why = exitWhy + ' Walk away from this shoe.';
+  } else if (nextPos === 0) {
+    why = 'Free hand (start of a new row) — do not bet, just watch.';
+  } else if (marks.length > 0) {
+    const prev = marks[marks.length - 1];
+    const wantCheck = prev.symReal === 'chk';
+    const side = wantCheck ? pattern[nextPos] : opp(pattern[nextPos]);
+    call = side;
+    why = `Follow last ${wantCheck ? '✓' : '✗'} → bet for a ${wantCheck ? 'Check' : 'X'} `
+        + `(pattern pos ${nextPos+1} is ${pattern[nextPos]}).`;
+  }
+  return { pattern, marks, call, why, exit, pl };
+}
+
+function drawRafael() {
+  const st = rafaelState();
+  const patHtml = st.pattern
+    ? '<span class="pat">' + st.pattern.map(s => `<span class="cell ${s}">${s}</span>`).join('') + '</span>'
+    : '<i>not set</i>';
+  rafState.innerHTML = `Three-pattern: ${patHtml}`;
+
+  const callEl = document.getElementById('rafCall');
+  callEl.className = 'raf-call' + (st.exit ? ' exit' : (st.call ? ' bet' : ''));
+  if (st.exit) {
+    rafWho.textContent = 'EXIT SHOE';
+  } else if (st.call) {
+    rafWho.textContent = 'BET ' + name(st.call);
+  } else {
+    rafWho.textContent = st.pattern && (st.marks.length % 3 === 0) ? 'FREE HAND' : '—';
+  }
+  rafWhy.textContent = st.why;
+
+  rafMarks.innerHTML = st.marks.length
+    ? st.marks.map(m => {
+        if (m.sym === 'free') return `<div class="mk free" title="free hand">·</div>`;
+        return m.sym === 'chk' ? `<div class="mk chk">✓</div>` : `<div class="mk x">✗</div>`;
+      }).join('')
+    : '<span class="note" style="margin:0">No marks yet.</span>';
+
+  rafPL.textContent = (st.pl >= 0 ? '+' : '') + st.pl.toFixed(2);
+  rafPL.className = st.pl >= 0 ? 'pos' : 'neg';
+}
+
+// Session P/L ----------------------------------------------------------------
+function drawPL() {
+  let net = 0, hands = 0;
+  for (const r of history) { hands++; if (r === 'T') continue; net += (r === 'B') ? 0.95 : -1; }
+  plHands.textContent = hands;
+  plNet.textContent = (net>=0?'+':'') + net.toFixed(2);
+  plNet.className = net >= 0 ? 'pos' : 'neg';
+}
+
+// Keyboard shortcuts ---------------------------------------------------------
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'b') add('B'); else if (k === 'p') add('P');
+  else if (k === 't') add('T'); else if (k === 'u') undo();
+});
+
+setMode('pattern');
+render();
+</script>
+</body>
+</html>

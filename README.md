@@ -13,6 +13,40 @@ simulated shoes so you can compare them on **ROI**, not folklore.
 
 ## Quick start
 
+### Web app (recommended for streaming / OBS)
+
+Just open **`tracker.html`** in any browser — double-click the file, or in OBS
+add a *Browser Source* pointing at it. No install, no Python needed.
+
+It gives you:
+- A casino-style **Big Road** and **Bead Plate** scoreboard
+- Big **BANKER / PLAYER / TIE** buttons (plus UNDO / RESET)
+- **Live odds** bars and the lowest-edge bet
+- A **card-count mode**: tap each dealt card and it recomputes the *true* odds
+  from the remaining shoe via in-browser Monte Carlo
+- **Strategy signals** that light up for B-P-B-P, streaks, chop, and Hong Kong
+  Lady
+- A **session P/L** readout for flat Banker betting
+
+### Visual desktop app (Tkinter)
+
+```bash
+python app.py
+```
+
+A desktop window with the same buttons and a Pattern Watch panel. Uses
+Tkinter, which ships with Python — no extra install. On Windows use
+`python app.py` (not `python3`).
+
+It also includes a built-in **auto-detect bar**: click **Snip result area** to
+drag-select where the result shows on your screen, **Capture B/P/T** to teach it
+one example of each outcome, then **Start detecting** to log results
+automatically. Auto-detect needs the extra libraries
+(`python -m pip install opencv-python mss numpy`); the manual buttons work
+without them.
+
+### Command-line analysis
+
 ```bash
 python main.py
 ```
@@ -27,8 +61,49 @@ comparison table.
 | `baccarat/engine.py` | Game rules: 8-deck shoe, card values, full third-card tableau, hand resolution. |
 | `baccarat/calculator.py` | `probabilities_from_remaining()` and `bet_expected_values()` — odds and EV from whatever cards are left. |
 | `baccarat/strategies.py` | Flat Banker, the B-P-B-P → Banker system, follow-the-streak (dragon), chop/zigzag. |
-| `baccarat/backtest.py` | Runs strategies over many shoes; reports wins, coverage, net units, ROI. |
-| `main.py` | Demo tying it all together. |
+| `baccarat/systems.py` | Stateful betting systems with money management: Flat, Martingale, Paroli, Hong Kong Lady, Hong Kong (Rafael). |
+| `baccarat/backtest.py` | Runs strategies and systems over many shoes; reports ROI, risk of ruin, max stake. |
+| `tracker.html` | Self-contained web app for live use / OBS: scoreboards, live odds, card counting, signals. |
+| `app.py` | Visual desktop tracker (Tkinter): click to log hands, see live odds and pattern alerts, plus a built-in auto-detect bar (snip + capture + detect). |
+| `baccarat/vision.py` | Optional screen-capture + template-matching card/result detector (OpenCV). |
+| `baccarat/snipper.py` | Drag-to-select "snipping tool" overlay (Tkinter) for picking the screen region. |
+| `detect.py` | CLI to calibrate (snipping tool or manual) and run auto-detection from your screen. |
+| `main.py` | Command-line demo tying it all together. |
+
+## Auto-detection from your screen (optional, advanced)
+
+`detect.py` can watch a region of your screen and log results automatically via
+template matching, so you don't have to click.
+
+**Please read before using:**
+- It does **not** improve your odds. It only saves clicks. Banker stays ~50.68%.
+- **Many casinos forbid automated tools in real-money play** and may close your
+  account / confiscate funds. Use it on demos, replays, or play-money tables.
+  You are responsible for following your casino's rules.
+
+**Setup (easiest — snipping tool):**
+```bash
+pip install opencv-python mss numpy        # extra libraries (one time)
+
+# Drag-to-select the result area, then capture one example of B / P / T.
+# A translucent overlay appears like the Windows Snipping Tool.
+python detect.py --snip
+
+# Then run live detection (prints each detected result + live odds)
+python detect.py --run
+```
+
+The `--snip` overlay uses Tkinter (bundled with Python), so selecting the
+region needs no extra install. Picking pixels by hand still works too:
+
+```bash
+python detect.py --grab --left 800 --top 600 --width 240 --height 120
+python detect.py --save-config --left 800 --top 600 --width 240 --height 120
+python detect.py --run
+```
+
+It must be calibrated to your specific screen and casino graphics — there is no
+universal detector.
 
 ## What the numbers show
 
@@ -47,6 +122,32 @@ strategy lands at essentially the same negative ROI as flat Banker betting.
 After a B-P-B-P chop, Banker still wins ~50.68% of the next non-tie hands —
 exactly its baseline rate. The pattern carries no predictive information,
 because baccarat hands are statistically independent.
+
+## Betting systems & money management
+
+`baccarat/systems.py` implements full systems (which side **and** how much),
+including two **Hong Kong** variants:
+- **Hong Kong Lady** — sets of three, skip the 4th "dead hand", ignore ties,
+  pattern-match marks, then bet the opposite with a Martingale.
+- **Hong Kong (Rafael)** — Mister Rafael's version: a "three pattern" (must hold
+  ≥1 Banker and ≥1 Player), Check/X marks, a free hand each row, follow the most
+  recent symbol (no Martingale), and exit at +3 units or on double-opposites.
+
+Backtested over 5,000 shoes with a 200-unit bankroll per session:
+
+| System | Win% | ROI | Risk of Ruin | Worst Session |
+|--------|------|-----|--------------|---------------|
+| Flat Banker | 50.6% | -1.1% | 0% | -31 |
+| Martingale Banker | 50.6% | -1.7% | **~21%** | **-129** |
+| Paroli Banker | 50.6% | -1.1% | 0% | -47 |
+| Hong Kong Lady | 50.2% | -0.5% | 0% | -21 |
+| Hong Kong (Rafael) | 50.1% | -1.0% | 0% | -2 |
+
+The takeaway: **money management changes the *shape* of results, not the edge.**
+Martingale produces many small wins but a real chance of catastrophic loss when
+a normal losing streak collides with your bankroll/table limit. Both Hong Kong
+variants just bet fewer hands with tight exits; their expectation is still
+negative. (Numbers vary slightly per run/seed.)
 
 ## The honest takeaways
 

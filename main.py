@@ -20,7 +20,13 @@ from baccarat.calculator import (
     bet_expected_values,
 )
 from baccarat.strategies import default_strategies
-from baccarat.backtest import backtest, format_results
+from baccarat.backtest import (
+    backtest,
+    format_results,
+    backtest_systems,
+    format_system_results,
+)
+from baccarat.systems import default_systems
 
 
 def section(title: str) -> None:
@@ -91,10 +97,27 @@ def run_backtest(seed: int = 42) -> None:
     )
 
 
+def run_systems_backtest(seed: int = 7) -> None:
+    section("4) Money-management systems (Hong Kong Lady, Martingale, Paroli)")
+    systems = default_systems(base=1.0)
+    print("Each shoe is one session starting with a 200-unit bankroll.\n")
+    results = backtest_systems(systems, num_shoes=5_000, bankroll=200.0, seed=seed)
+    print(format_system_results(results))
+    print(
+        "\nNotice: every system's ROI is still negative (~-1%), because money"
+        "\nmanagement cannot beat an independent game. Martingale shows the"
+        "\ntrap clearly -- a high win rate and steady small gains, but a large"
+        "\nmax bet, real risk of ruin, and brutal worst sessions when a losing"
+        "\nstreak finally lands. Hong Kong Lady is just pattern selection plus a"
+        "\ncapped Martingale: same negative expectation, fewer hands bet."
+    )
+
+
 def main() -> None:
     show_fresh_shoe_odds()
     show_card_counting_effect()
     run_backtest()
+    run_systems_backtest()
     print("\nDone.")
 
 
