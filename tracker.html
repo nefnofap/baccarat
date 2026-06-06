@@ -6,269 +6,325 @@
 <title>Baccarat Live Tracker</title>
 <style>
   :root {
-    --bg: #0a0e1a;
-    --panel: #131a2e;
-    --panel2: #1b2540;
-    --line: #26314f;
-    --text: #e8ecf5;
-    --muted: #8a97b8;
-    --banker: #e63946;
-    --player: #3d8bfd;
-    --tie: #2ec4a6;
+    --bg0: #05070f;
+    --bg1: #0a0f1f;
+    --glass: rgba(22, 30, 54, 0.55);
+    --glass-brd: rgba(120, 140, 200, 0.16);
+    --panel: rgba(17, 24, 44, 0.72);
+    --ink: #eef2ff;
+    --muted: #8893b5;
+    --faint: #5b6280;
+    --banker: #ff4d5e;
+    --banker2: #ff8a94;
+    --player: #4d8dff;
+    --player2: #8fb6ff;
+    --tie: #1fd1a8;
+    --tie2: #74efd2;
     --gold: #ffd166;
-    --shadow: 0 10px 30px rgba(0,0,0,.45);
+    --shadow: 0 20px 60px rgba(0,0,0,.55);
   }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    background: radial-gradient(1200px 700px at 70% -10%, #16203a 0%, var(--bg) 60%);
-    color: var(--text);
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; height: 100%; }
+  body {
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 600px at 12% -8%, #15224a 0%, transparent 55%),
+      radial-gradient(1100px 700px at 95% 0%, #2a1336 0%, transparent 50%),
+      radial-gradient(800px 800px at 50% 120%, #06283a 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg0));
+    background-attachment: fixed;
+    min-height: 100%;
   }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 22px 22px 40px; }
+
+  /* Header */
   header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px; gap: 16px; flex-wrap: wrap;
+    gap: 18px; margin-bottom: 20px; flex-wrap: wrap;
   }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .chip {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: conic-gradient(from 45deg, var(--banker), var(--gold), var(--player), var(--tie), var(--banker));
-    box-shadow: var(--shadow); position: relative;
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 52px; height: 52px; border-radius: 16px; position: relative;
+    background: conic-gradient(from 210deg, var(--banker), var(--gold), var(--player), var(--tie), var(--banker));
+    box-shadow: 0 8px 30px rgba(255,77,94,.35), inset 0 0 0 1px rgba(255,255,255,.15);
+    animation: spin 14s linear infinite;
   }
-  .chip::after {
-    content:""; position:absolute; inset:7px; border-radius:50%;
-    background:var(--panel); border:2px dashed rgba(255,255,255,.25);
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .logo::after {
+    content: "B"; position: absolute; inset: 6px; border-radius: 11px;
+    background: #0a0f1f; display: grid; place-items: center;
+    font-weight: 900; font-size: 22px; color: var(--gold);
+    box-shadow: inset 0 0 12px rgba(0,0,0,.6);
   }
-  h1 { font-size: 22px; margin: 0; letter-spacing: .5px; }
-  h1 span { color: var(--gold); }
-  .disclaimer {
-    font-size: 12px; color: var(--muted); max-width: 420px; text-align: right;
-    line-height: 1.4;
+  h1 { margin: 0; font-size: 24px; letter-spacing: .6px; font-weight: 800; }
+  h1 em { color: var(--gold); font-style: normal; }
+  .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .banner {
+    font-size: 11.5px; color: #ffd9b0; background: rgba(255,120,80,.10);
+    border: 1px solid rgba(255,150,90,.25); padding: 9px 13px; border-radius: 12px;
+    max-width: 430px; line-height: 1.5;
   }
-  .grid { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
-  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
   .card {
-    background: linear-gradient(180deg, var(--panel) 0%, #101627 100%);
-    border: 1px solid var(--line); border-radius: 16px; padding: 16px;
-    box-shadow: var(--shadow);
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid var(--glass-brd);
+    border-radius: 20px; padding: 18px; box-shadow: var(--shadow);
   }
+  .card + .card { margin-top: 18px; }
   .card h2 {
-    font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px;
-    color: var(--muted); margin: 0 0 12px;
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--muted); margin: 0 0 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
   }
-  /* Scoreboards */
-  .boards { display: grid; grid-template-rows: auto auto; gap: 14px; }
+  .card h2::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 10px var(--gold);
+  }
+
+  /* Roads */
+  .roads { display: grid; gap: 14px; }
   .road {
-    background-color: #0c1222;
-    border: 1px solid var(--line); border-radius: 12px; padding: 10px;
-    overflow-x: auto;
+    background: rgba(6,10,22,.6); border: 1px solid var(--glass-brd);
+    border-radius: 14px; padding: 12px; overflow-x: auto;
     background-image:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      linear-gradient(rgba(120,140,200,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,140,200,.06) 1px, transparent 1px);
     background-size: 30px 30px;
   }
-  .road-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-  .beadgrid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(6, 28px);
-    grid-auto-columns: 28px; gap: 2px; min-height: 174px; }
-  .bigroad { display: grid; grid-auto-flow: column; grid-template-rows: repeat(6, 28px);
-    grid-auto-columns: 28px; gap: 2px; min-height: 174px; }
-  .bead {
-    width: 26px; height: 26px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; color: #fff;
-    box-shadow: inset 0 -2px 4px rgba(0,0,0,.35);
+  .road-label { font-size: 10.5px; color: var(--muted); margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 1.2px; }
+  .beadgrid, .bigroad {
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(6, 30px);
+    grid-auto-columns: 30px; gap: 3px; min-height: 192px;
   }
+  .bead {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12px; font-weight: 800;
+    color: #fff; box-shadow: inset 0 -2px 6px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.3);
+    animation: pop .25s ease;
+  }
+  @keyframes pop { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .b-bg { background: radial-gradient(circle at 34% 28%, var(--banker2), var(--banker)); }
+  .p-bg { background: radial-gradient(circle at 34% 28%, var(--player2), var(--player)); }
+  .t-bg { background: radial-gradient(circle at 34% 28%, var(--tie2), var(--tie)); }
   .ring {
-    width: 26px; height: 26px; border-radius: 50%;
-    border: 3px solid var(--banker); background: transparent;
-    position: relative;
+    width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--banker);
+    background: transparent; animation: pop .25s ease;
   }
   .ring.p { border-color: var(--player); }
-  .b-bg { background: radial-gradient(circle at 35% 30%, #ff6b76, var(--banker)); }
-  .p-bg { background: radial-gradient(circle at 35% 30%, #6fb0ff, var(--player)); }
-  .t-bg { background: radial-gradient(circle at 35% 30%, #57e6cd, var(--tie)); }
-  .tie-slash { position:absolute; width:2px; height:34px; background:var(--tie);
-    transform: rotate(45deg); top:-4px; left:11px; }
+
   /* Stats */
-  .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 14px; }
   .stat {
-    flex: 1; min-width: 90px; background: var(--panel2);
-    border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    background: var(--panel); border: 1px solid var(--glass-brd);
+    border-radius: 14px; padding: 12px 14px; position: relative; overflow: hidden;
   }
-  .stat .n { font-size: 22px; font-weight: 800; }
-  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-  .stat.b .n { color: var(--banker); }
-  .stat.p .n { color: var(--player); }
-  .stat.t .n { color: var(--tie); }
+  .stat .n { font-size: 26px; font-weight: 900; line-height: 1; }
+  .stat .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; margin-top: 6px; }
+  .stat.b .n { color: var(--banker2); } .stat.p .n { color: var(--player2); }
+  .stat.t .n { color: var(--tie2); }
+
   /* Buttons */
-  .btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
-  .btns .row2 { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btns { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px; }
+  .btns .row2 { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   button.action {
-    border: none; border-radius: 12px; padding: 18px; font-size: 18px;
-    font-weight: 800; color: #fff; cursor: pointer; letter-spacing: .5px;
-    transition: transform .06s ease, filter .15s ease; box-shadow: var(--shadow);
+    border: none; border-radius: 16px; padding: 20px; font-size: 19px; font-weight: 800;
+    color: #fff; cursor: pointer; letter-spacing: .6px; position: relative;
+    transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+    text-shadow: 0 1px 2px rgba(0,0,0,.35);
   }
-  button.action:active { transform: translateY(2px); }
-  button.action:hover { filter: brightness(1.1); }
-  .bk { background: linear-gradient(180deg, #ff5763, var(--banker)); }
-  .pl { background: linear-gradient(180deg, #5a9dff, var(--player)); }
-  .ti { background: linear-gradient(180deg, #38d9b8, var(--tie)); }
-  .ghost { background: var(--panel2); border: 1px solid var(--line); }
+  button.action:active { transform: translateY(3px) scale(.99); }
+  .bk { background: linear-gradient(180deg, var(--banker2), var(--banker));
+    box-shadow: 0 10px 28px rgba(255,77,94,.38); }
+  .pl { background: linear-gradient(180deg, var(--player2), var(--player));
+    box-shadow: 0 10px 28px rgba(77,141,255,.38); }
+  .ti { background: linear-gradient(180deg, var(--tie2), var(--tie));
+    box-shadow: 0 10px 28px rgba(31,209,168,.34); }
+  .bk:hover,.pl:hover,.ti:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .ghost { background: rgba(255,255,255,.05); border: 1px solid var(--glass-brd);
+    color: var(--ink); box-shadow: none; }
+  .ghost:hover { background: rgba(255,255,255,.1); }
+
   /* Odds */
-  .bar { height: 12px; border-radius: 6px; background: var(--panel2); overflow: hidden; margin: 4px 0 12px; }
-  .bar > span { display: block; height: 100%; }
-  .odds-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 2px; }
-  .bestbet { text-align: center; padding: 14px; border-radius: 12px; background: var(--panel2);
-    border: 1px solid var(--line); margin-top: 10px; }
-  .bestbet .who { font-size: 30px; font-weight: 900; color: var(--banker); }
-  .bestbet .sub { font-size: 11px; color: var(--muted); }
-  /* signals */
-  .sig { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px;
-    background: var(--panel2); border: 1px solid var(--line); margin-bottom: 8px; font-size: 13px; }
-  .sig .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
-  .sig.on { border-color: var(--gold); }
-  .sig.on .dot { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
-  .sig .call { margin-left: auto; font-weight: 800; }
-  .pl-line { display:flex; justify-content:space-between; font-size:14px; margin-top:6px; }
-  .pos { color: var(--tie); } .neg { color: var(--banker); }
-  .mode { display:flex; gap:6px; margin-bottom:10px; }
-  .mode button { flex:1; padding:8px; border-radius:8px; border:1px solid var(--line);
-    background:var(--panel2); color:var(--muted); cursor:pointer; font-size:12px; font-weight:700; }
-  .mode button.sel { color:#fff; border-color:var(--gold); }
-  .cardpad { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
-  .cardpad button { padding:10px 0; border-radius:8px; border:1px solid var(--line);
-    background:var(--panel2); color:var(--text); font-weight:800; cursor:pointer; }
-  .cardpad button:hover { border-color: var(--gold); }
-  .note { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 10px; }
-  .footer { text-align:center; color:var(--muted); font-size:11px; margin-top:18px; }
+  .odds-row { display: flex; justify-content: space-between; font-size: 14px;
+    margin-bottom: 4px; align-items: baseline; }
+  .odds-row b { font-size: 16px; }
+  .bar { height: 13px; border-radius: 8px; background: rgba(255,255,255,.06);
+    overflow: hidden; margin: 2px 0 14px; }
+  .bar > span { display: block; height: 100%; border-radius: 8px;
+    transition: width .5s cubic-bezier(.2,.7,.2,1); }
+  .bestbet {
+    text-align: center; padding: 16px; border-radius: 16px; margin-top: 6px;
+    background: linear-gradient(180deg, rgba(255,77,94,.16), rgba(255,77,94,.05));
+    border: 1px solid rgba(255,77,94,.3);
+  }
+  .bestbet .who { font-size: 34px; font-weight: 900; color: var(--banker2);
+    letter-spacing: 1px; text-shadow: 0 0 22px rgba(255,77,94,.5); }
+  .bestbet .lab, .bestbet .edge { font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1.3px; }
+
+  /* Signals */
+  .sig { display: flex; align-items: center; gap: 10px; padding: 11px 13px;
+    border-radius: 12px; background: var(--panel); border: 1px solid var(--glass-brd);
+    margin-bottom: 9px; font-size: 13.5px; transition: all .2s ease; }
+  .sig .dot { width: 9px; height: 9px; border-radius: 50%; background: #46506e; flex: none; }
+  .sig .call { margin-left: auto; font-weight: 800; color: var(--muted); }
+  .sig.on { border-color: rgba(255,209,102,.55);
+    background: linear-gradient(180deg, rgba(255,209,102,.14), rgba(255,209,102,.04)); }
+  .sig.on .dot { background: var(--gold); box-shadow: 0 0 12px var(--gold); animation: pulse 1.3s infinite; }
+  .sig.on .call { color: var(--gold); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  /* Mode toggle + card pad */
+  .mode { display: flex; gap: 8px; margin-bottom: 12px; }
+  .mode button { flex: 1; padding: 9px; border-radius: 10px; border: 1px solid var(--glass-brd);
+    background: var(--panel); color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 700;
+    transition: all .2s ease; }
+  .mode button.sel { color: #06121f; background: var(--gold); border-color: var(--gold); }
+  .cardpad { display: grid; grid-template-columns: repeat(5,1fr); gap: 7px; }
+  .cardpad button { padding: 12px 0; border-radius: 10px; border: 1px solid var(--glass-brd);
+    background: var(--panel); color: var(--ink); font-weight: 800; cursor: pointer; font-size: 15px;
+    transition: all .15s ease; }
+  .cardpad button:hover { border-color: var(--gold); transform: translateY(-1px); }
+
+  .kv { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; }
+  .kv b { font-variant-numeric: tabular-nums; }
+  .pos { color: var(--tie2); } .neg { color: var(--banker2); }
+  .note { font-size: 11px; color: var(--muted); line-height: 1.55; margin-top: 12px; }
+  .footer { text-align: center; color: var(--muted); font-size: 11px; margin-top: 22px; line-height: 1.6; }
+  kbd { background: rgba(255,255,255,.08); border: 1px solid var(--glass-brd); border-radius: 6px;
+    padding: 1px 7px; font-size: 11px; font-family: inherit; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="brand">
-      <div class="chip"></div>
+      <div class="logo"></div>
       <div>
-        <h1>BACCARAT <span>LIVE TRACKER</span></h1>
-        <div style="font-size:12px;color:var(--muted)">Big Road &amp; Bead Plate &middot; live odds &middot; strategy signals</div>
+        <h1>BACCARAT <em>LIVE TRACKER</em></h1>
+        <div class="sub">Big Road &amp; Bead Plate &middot; live odds &middot; strategy signals &middot; card counting</div>
       </div>
     </div>
-    <div class="disclaimer">
-      Baccarat hands are independent. Past results do <b>not</b> change the next hand's odds
-      (~50.68% Banker, non-tie). Signals below are for tracking, not an edge.
+    <div class="banner">
+      Hands are independent &mdash; past results don't change the next hand
+      (~50.68% Banker, non-tie). Signals are for tracking, <b>not</b> an edge.
     </div>
   </header>
 
   <div class="grid">
-    <!-- LEFT: boards + buttons -->
-    <div class="card">
-      <h2>Scoreboard</h2>
-      <div class="boards">
-        <div class="road">
-          <div class="road-label">Bead Plate (every result, ties marked)</div>
-          <div id="bead" class="beadgrid"></div>
+    <!-- LEFT -->
+    <div>
+      <div class="card">
+        <h2>Scoreboard</h2>
+        <div class="roads">
+          <div class="road">
+            <div class="road-label">Bead Plate &mdash; every result</div>
+            <div id="bead" class="beadgrid"></div>
+          </div>
+          <div class="road">
+            <div class="road-label">Big Road &mdash; Banker/Player columns (ties skipped)</div>
+            <div id="big" class="bigroad"></div>
+          </div>
         </div>
-        <div class="road">
-          <div class="road-label">Big Road (Banker/Player columns, ties ignored)</div>
-          <div id="big" class="bigroad"></div>
+        <div class="stats">
+          <div class="stat b"><div class="n" id="cB">0</div><div class="l">Banker</div></div>
+          <div class="stat p"><div class="n" id="cP">0</div><div class="l">Player</div></div>
+          <div class="stat t"><div class="n" id="cT">0</div><div class="l">Tie</div></div>
+          <div class="stat"><div class="n" id="cN">0</div><div class="l">Total</div></div>
         </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat b"><div class="n" id="cB">0</div><div class="l">Banker</div></div>
-        <div class="stat p"><div class="n" id="cP">0</div><div class="l">Player</div></div>
-        <div class="stat t"><div class="n" id="cT">0</div><div class="l">Tie</div></div>
-        <div class="stat"><div class="n" id="cN">0</div><div class="l">Total</div></div>
-      </div>
-
-      <div class="btns" style="margin-top:14px">
-        <button class="action bk" onclick="add('B')">BANKER</button>
-        <button class="action pl" onclick="add('P')">PLAYER</button>
-        <button class="action ti" onclick="add('T')">TIE</button>
-        <div class="row2">
-          <button class="action ghost" onclick="undo()">UNDO</button>
-          <button class="action ghost" onclick="resetAll()">RESET</button>
+        <div class="btns">
+          <button class="action bk" onclick="add('B')">BANKER</button>
+          <button class="action pl" onclick="add('P')">PLAYER</button>
+          <button class="action ti" onclick="add('T')">TIE</button>
+          <div class="row2">
+            <button class="action ghost" onclick="undo()">UNDO</button>
+            <button class="action ghost" onclick="resetAll()">RESET</button>
+          </div>
         </div>
+        <div class="note">Keyboard: <kbd>B</kbd> Banker &middot; <kbd>P</kbd> Player &middot; <kbd>T</kbd> Tie &middot; <kbd>U</kbd> Undo</div>
       </div>
     </div>
 
-    <!-- RIGHT: odds, bet, signals, P/L -->
+    <!-- RIGHT -->
     <div>
-      <div class="card" style="margin-bottom:16px">
+      <div class="card">
         <h2>Next-hand odds</h2>
         <div id="oddsBox"></div>
         <div class="bestbet">
-          <div class="sub">LOWEST-EDGE BET</div>
+          <div class="lab">Lowest-edge bet</div>
           <div class="who">BANKER</div>
-          <div class="sub">House edge 1.06% &middot; Player 1.24% &middot; Tie ~14%</div>
+          <div class="edge">House edge 1.06% &middot; Player 1.24% &middot; Tie ~14%</div>
         </div>
         <div class="note" id="countNote"></div>
       </div>
 
-      <div class="card" style="margin-bottom:16px">
-        <h2>Card-count mode (optional)</h2>
+      <div class="card">
+        <h2>Card-count mode</h2>
         <div class="mode">
           <button id="mPattern" class="sel" onclick="setMode('pattern')">Pattern only</button>
           <button id="mCount" onclick="setMode('count')">Track cards</button>
         </div>
         <div id="countPanel" style="display:none">
-          <div class="note">Tap each card value as it's dealt to update the true odds from the remaining shoe (8 decks). 0 = 10/J/Q/K.</div>
-          <div class="cardpad" style="margin-top:8px">
+          <div class="note" style="margin-top:0">Tap each card as it's dealt to recompute true odds from the remaining 8-deck shoe. <b>0</b> = 10/J/Q/K.</div>
+          <div class="cardpad" style="margin-top:10px">
             <button onclick="useCard(0)">0</button><button onclick="useCard(1)">A</button>
             <button onclick="useCard(2)">2</button><button onclick="useCard(3)">3</button>
             <button onclick="useCard(4)">4</button><button onclick="useCard(5)">5</button>
             <button onclick="useCard(6)">6</button><button onclick="useCard(7)">7</button>
             <button onclick="useCard(8)">8</button><button onclick="useCard(9)">9</button>
           </div>
-          <div class="pl-line"><span>Cards remaining</span><b id="remain">416</b></div>
-          <button class="action ghost" style="width:100%;margin-top:10px;padding:10px" onclick="recompute()">Recompute odds</button>
+          <div class="kv"><span>Cards remaining</span><b id="remain">416</b></div>
+          <button class="action ghost" style="width:100%;margin-top:12px;padding:12px;font-size:14px" onclick="recompute()">Recompute odds</button>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:16px">
+      <div class="card">
         <h2>Strategy signals</h2>
         <div id="signals"></div>
       </div>
 
       <div class="card">
-        <h2>Session P/L (flat 1u Banker)</h2>
-        <div class="pl-line"><span>Hands</span><b id="plHands">0</b></div>
-        <div class="pl-line"><span>Net units</span><b id="plNet">0.00</b></div>
-        <div class="note">Tracks what flat-betting 1 unit on Banker every hand would have returned for the results you logged.</div>
+        <h2>Session P/L &mdash; flat 1u Banker</h2>
+        <div class="kv"><span>Hands played</span><b id="plHands">0</b></div>
+        <div class="kv"><span>Net units</span><b id="plNet">0.00</b></div>
+        <div class="note">What flat-betting 1 unit on Banker every hand would have returned for the results you logged (5% commission on Banker wins).</div>
       </div>
     </div>
   </div>
 
-  <div class="footer">For entertainment &amp; analysis. No betting system overcomes the house edge in baccarat. Play responsibly.</div>
+  <div class="footer">
+    For entertainment &amp; analysis only. No betting system overcomes the baccarat house edge. Please play responsibly.
+  </div>
 </div>
 
 <script>
 // ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-let history = [];                         // 'B' | 'P' | 'T'
+let history = [];
 let mode = 'pattern';
-let remaining = freshShoe();              // counts of values 0..9
+let remaining = freshShoe();
 const BASE_ODDS = { B: 0.4586, P: 0.4462, T: 0.0952 };
 let odds = { ...BASE_ODDS };
 
 function freshShoe() {
-  // 8 decks: value 0 has 16 per deck (10,J,Q,K) => 128; values 1..9 have 4 => 32 each.
   const c = new Array(10).fill(0);
-  c[0] = 8 * 16;
+  c[0] = 8 * 16;                       // 10/J/Q/K
   for (let v = 1; v <= 9; v++) c[v] = 8 * 4;
   return c;
 }
 
-// ---------------------------------------------------------------------------
-// Result logging
-// ---------------------------------------------------------------------------
+// Logging --------------------------------------------------------------------
 function add(r) { history.push(r); render(); }
 function undo() { history.pop(); render(); }
-function resetAll() {
-  history = []; remaining = freshShoe(); odds = { ...BASE_ODDS }; render();
-}
+function resetAll() { history = []; remaining = freshShoe(); odds = { ...BASE_ODDS }; render(); }
 
 function counts() {
   return {
@@ -278,121 +334,93 @@ function counts() {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Scoreboards
-// ---------------------------------------------------------------------------
-function render() {
-  drawBead(); drawBig(); drawStats(); drawOdds(); drawSignals(); drawPL();
-}
+// Render ---------------------------------------------------------------------
+function render() { drawBead(); drawBig(); drawStats(); drawOdds(); drawSignals(); drawPL(); }
 
 function drawBead() {
   const el = document.getElementById('bead');
   el.innerHTML = '';
   for (const r of history) {
     const d = document.createElement('div');
-    if (r === 'B') { d.className = 'bead b-bg'; d.textContent = 'B'; }
-    else if (r === 'P') { d.className = 'bead p-bg'; d.textContent = 'P'; }
-    else { d.className = 'bead t-bg'; d.textContent = 'T'; }
+    d.className = 'bead ' + (r === 'B' ? 'b-bg' : r === 'P' ? 'p-bg' : 't-bg');
+    d.textContent = r;
     el.appendChild(d);
   }
 }
 
 function drawBig() {
-  // Big Road: ties ignored; consecutive same results stack vertically.
   const el = document.getElementById('big');
   el.innerHTML = '';
   const seq = history.filter(x => x === 'B' || x === 'P');
   let col = -1, row = 0, last = null;
-  const place = [];
   for (const r of seq) {
-    if (r === last) { row++; if (row > 5) row = 5; }
+    if (r === last) { row = Math.min(row + 1, 5); }
     else { col++; row = 0; last = r; }
-    place.push([col, row, r]);
-  }
-  for (const [c, rw, r] of place) {
     const d = document.createElement('div');
     d.className = 'ring' + (r === 'P' ? ' p' : '');
-    d.style.gridColumnStart = c + 1;
-    d.style.gridRowStart = rw + 1;
+    d.style.gridColumnStart = col + 1;
+    d.style.gridRowStart = row + 1;
     el.appendChild(d);
   }
 }
 
 function drawStats() {
   const c = counts();
-  document.getElementById('cB').textContent = c.B;
-  document.getElementById('cP').textContent = c.P;
-  document.getElementById('cT').textContent = c.T;
-  document.getElementById('cN').textContent = history.length;
+  cB.textContent = c.B; cP.textContent = c.P; cT.textContent = c.T; cN.textContent = history.length;
 }
 
-// ---------------------------------------------------------------------------
-// Odds display
-// ---------------------------------------------------------------------------
 function drawOdds() {
-  const box = document.getElementById('oddsBox');
-  const rows = [['Banker','B','var(--banker)'],['Player','P','var(--player)'],['Tie','T','var(--tie)']];
-  box.innerHTML = rows.map(([name,k,col]) => `
-    <div class="odds-row"><span>${name}</span><b>${(odds[k]*100).toFixed(2)}%</b></div>
-    <div class="bar"><span style="width:${(odds[k]*100).toFixed(1)}%;background:${col}"></span></div>
-  `).join('');
+  const rows = [['Banker','B','linear-gradient(90deg,#ff8a94,#ff4d5e)'],
+                ['Player','P','linear-gradient(90deg,#8fb6ff,#4d8dff)'],
+                ['Tie','T','linear-gradient(90deg,#74efd2,#1fd1a8)']];
+  oddsBox.innerHTML = rows.map(([n,k,g]) => `
+    <div class="odds-row"><span>${n}</span><b>${(odds[k]*100).toFixed(2)}%</b></div>
+    <div class="bar"><span style="width:${(odds[k]*100).toFixed(1)}%;background:${g}"></span></div>`).join('');
 }
 
-// ---------------------------------------------------------------------------
-// Card-count mode + Monte Carlo (true odds from remaining cards)
-// ---------------------------------------------------------------------------
+// Card-count mode ------------------------------------------------------------
 function setMode(m) {
   mode = m;
-  document.getElementById('mPattern').classList.toggle('sel', m === 'pattern');
-  document.getElementById('mCount').classList.toggle('sel', m === 'count');
-  document.getElementById('countPanel').style.display = m === 'count' ? 'block' : 'none';
-  document.getElementById('countNote').textContent = m === 'count'
-    ? 'Odds below are computed live from the cards still in the shoe.'
+  mPattern.classList.toggle('sel', m === 'pattern');
+  mCount.classList.toggle('sel', m === 'count');
+  countPanel.style.display = m === 'count' ? 'block' : 'none';
+  countNote.textContent = m === 'count'
+    ? 'Odds are computed live from the cards still in the shoe.'
     : 'Showing baseline fresh-shoe odds. Switch to "Track cards" for live counting.';
 }
-
-function useCard(v) {
-  if (remaining[v] > 0) remaining[v]--;
-  document.getElementById('remain').textContent = remaining.reduce((a,b)=>a+b,0);
-}
-
-function total(vals) { return vals.reduce((a,b)=>a+b,0) % 10; }
+function useCard(v) { if (remaining[v] > 0) remaining[v]--; remain.textContent = remaining.reduce((a,b)=>a+b,0); }
+function total(v) { return v.reduce((a,b)=>a+b,0) % 10; }
 
 function resolveCoup(draw) {
-  const player = [draw(), draw()];
-  const banker = [draw(), draw()];
-  let p = total(player), b = total(banker);
+  const pl = [draw(), draw()], bk = [draw(), draw()];
+  let p = total(pl), b = total(bk);
   if (p < 8 && b < 8) {
     let p3 = null;
-    if (p <= 5) { p3 = draw(); player.push(p3); p = total(player); }
-    let bDraw;
-    if (p3 === null) bDraw = b <= 5;
-    else if (b <= 2) bDraw = true;
-    else if (b === 3) bDraw = p3 !== 8;
-    else if (b === 4) bDraw = p3 >= 2 && p3 <= 7;
-    else if (b === 5) bDraw = p3 >= 4 && p3 <= 7;
-    else if (b === 6) bDraw = p3 === 6 || p3 === 7;
-    else bDraw = false;
-    if (bDraw) { banker.push(draw()); b = total(banker); }
+    if (p <= 5) { p3 = draw(); pl.push(p3); p = total(pl); }
+    let bd;
+    if (p3 === null) bd = b <= 5;
+    else if (b <= 2) bd = true;
+    else if (b === 3) bd = p3 !== 8;
+    else if (b === 4) bd = p3 >= 2 && p3 <= 7;
+    else if (b === 5) bd = p3 >= 4 && p3 <= 7;
+    else if (b === 6) bd = p3 === 6 || p3 === 7;
+    else bd = false;
+    if (bd) { bk.push(draw()); b = total(bk); }
   }
   return p > b ? 'P' : (b > p ? 'B' : 'T');
 }
 
 function recompute() {
-  // Monte Carlo over the remaining shoe.
   const pool = [];
   for (let v = 0; v < 10; v++) for (let i = 0; i < remaining[v]; i++) pool.push(v);
   if (pool.length < 6) { alert('Not enough cards left in the shoe.'); return; }
-  const trials = 40000;
-  let B = 0, P = 0, T = 0;
+  const trials = 40000; let B=0,P=0,T=0;
   for (let t = 0; t < trials; t++) {
-    // partial Fisher-Yates: shuffle just the first 6 slots we may need
     for (let i = 0; i < 6 && i < pool.length; i++) {
       const j = i + Math.floor(Math.random() * (pool.length - i));
       const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
     }
-    let idx = 0;
-    const draw = () => pool[idx++];
+    let idx = 0; const draw = () => pool[idx++];
     const r = resolveCoup(draw);
     if (r === 'B') B++; else if (r === 'P') P++; else T++;
   }
@@ -400,36 +428,15 @@ function recompute() {
   drawOdds();
 }
 
-// ---------------------------------------------------------------------------
-// Strategy signals (pattern recognition)
-// ---------------------------------------------------------------------------
+// Signals --------------------------------------------------------------------
 function nonTie() { return history.filter(x => x !== 'T'); }
-
-function signalBPBP() {
-  const h = nonTie();
-  if (h.length < 4) return null;
-  const l = h.slice(-4).join('');
-  return l === 'BPBP' ? 'B' : null;
-}
-function signalStreak(min=3) {
-  const h = nonTie();
-  if (h.length < min) return null;
-  const last = h[h.length-1];
-  return h.slice(-min).every(x => x === last) ? last : null;
-}
-function signalChop(min=3) {
-  const h = nonTie();
-  if (h.length < min+1) return null;
-  const w = h.slice(-(min+1));
-  for (let i=1;i<w.length;i++) if (w[i]===w[i-1]) return null;
-  return w[w.length-1] === 'B' ? 'P' : 'B';
-}
-function signalHKL() {
-  // Lightweight live read of Hong Kong Lady: sets of 3 (skip every 4th non-tie
-  // "dead hand"), first non-uniform set is the reference, 3 same marks in a row
-  // triggers betting the opposite. Shown as informational only.
-  const nt = nonTie();
-  const live = []; let n = 0;
+function sigBPBP() { const h = nonTie(); return h.length >= 4 && h.slice(-4).join('') === 'BPBP' ? 'B' : null; }
+function sigStreak(m=3) { const h = nonTie(); if (h.length < m) return null; const l = h[h.length-1];
+  return h.slice(-m).every(x => x === l) ? l : null; }
+function sigChop(m=3) { const h = nonTie(); if (h.length < m+1) return null; const w = h.slice(-(m+1));
+  for (let i=1;i<w.length;i++) if (w[i]===w[i-1]) return null; return w[w.length-1]==='B'?'P':'B'; }
+function sigHKL() {
+  const nt = nonTie(); const live = []; let n = 0;
   for (const r of nt) { if (n % 4 !== 3) live.push(r); n++; }
   if (live.length < 6) return null;
   let ref = null; const marks = [];
@@ -440,47 +447,38 @@ function signalHKL() {
   }
   if (marks.length < 3) return null;
   const m = marks.slice(-3);
-  if (m[0]===m[1] && m[1]===m[2]) {
-    const lastLive = live[live.length-1];
-    return lastLive === 'B' ? 'P' : 'B';
-  }
-  return null;
+  return (m[0]===m[1]&&m[1]===m[2]) ? (live[live.length-1]==='B'?'P':'B') : null;
 }
-
-function sideName(s){ return s==='B'?'BANKER':(s==='P'?'PLAYER':'TIE'); }
+function name(s){ return s==='B'?'BANKER':s==='P'?'PLAYER':'TIE'; }
 
 function drawSignals() {
   const defs = [
-    ['B-P-B-P chop (your system)', signalBPBP()],
-    ['Follow streak (Dragon 3+)', signalStreak(3)],
-    ['Chop / zigzag (3+)', signalChop(3)],
-    ['Hong Kong Lady', signalHKL()],
+    ['B-P-B-P chop (your system)', sigBPBP()],
+    ['Follow streak (Dragon 3+)', sigStreak(3)],
+    ['Chop / zigzag (3+)', sigChop(3)],
+    ['Hong Kong Lady', sigHKL()],
   ];
-  document.getElementById('signals').innerHTML = defs.map(([name, call]) => `
-    <div class="sig ${call ? 'on' : ''}">
-      <span class="dot"></span>${name}
-      <span class="call">${call ? '→ ' + sideName(call) : '—'}</span>
-    </div>
-  `).join('');
+  signals.innerHTML = defs.map(([n,c]) => `
+    <div class="sig ${c?'on':''}"><span class="dot"></span>${n}
+    <span class="call">${c?'→ '+name(c):'—'}</span></div>`).join('');
 }
 
-// ---------------------------------------------------------------------------
-// Session P/L: flat 1u Banker
-// ---------------------------------------------------------------------------
+// Session P/L ----------------------------------------------------------------
 function drawPL() {
   let net = 0, hands = 0;
-  for (const r of history) {
-    hands++;
-    if (r === 'T') continue;            // push
-    net += (r === 'B') ? 0.95 : -1;     // win pays 0.95 (5% commission), else -1
-  }
-  document.getElementById('plHands').textContent = hands;
-  const el = document.getElementById('plNet');
-  el.textContent = net.toFixed(2);
-  el.className = net >= 0 ? 'pos' : 'neg';
+  for (const r of history) { hands++; if (r === 'T') continue; net += (r === 'B') ? 0.95 : -1; }
+  plHands.textContent = hands;
+  plNet.textContent = (net>=0?'+':'') + net.toFixed(2);
+  plNet.className = net >= 0 ? 'pos' : 'neg';
 }
 
-// init
+// Keyboard shortcuts ---------------------------------------------------------
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'b') add('B'); else if (k === 'p') add('P');
+  else if (k === 't') add('T'); else if (k === 'u') undo();
+});
+
 setMode('pattern');
 render();
 </script>
