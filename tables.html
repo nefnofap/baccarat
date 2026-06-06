@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Baccarat Multi-Table - Rafael Scanner</title>
+<style>
+  :root {
+    --bg0:#05070f; --bg1:#0a0f1f; --glass:rgba(22,30,54,.55); --brd:rgba(120,140,200,.16);
+    --panel:rgba(17,24,44,.72); --ink:#eef2ff; --muted:#8893b5;
+    --banker:#ff4d5e; --banker2:#ff8a94; --player:#4d8dff; --player2:#8fb6ff;
+    --tie:#1fd1a8; --tie2:#74efd2; --gold:#ffd166; --shadow:0 16px 44px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(900px 600px at 12% -8%, #15224a 0%, transparent 55%),
+      radial-gradient(1100px 700px at 95% 0%, #2a1336 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg1), var(--bg0));
+    background-attachment:fixed; min-height:100%;
+  }
+  .wrap{max-width:1400px;margin:0 auto;padding:20px 20px 50px;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .brand{display:flex;align-items:center;gap:13px;}
+  .logo{width:48px;height:48px;border-radius:14px;position:relative;
+    background:conic-gradient(from 210deg,var(--banker),var(--gold),var(--player),var(--tie),var(--banker));
+    box-shadow:0 8px 26px rgba(255,77,94,.35);animation:spin 14s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .logo::after{content:"R";position:absolute;inset:6px;border-radius:9px;background:#0a0f1f;
+    display:grid;place-items:center;font-weight:900;font-size:20px;color:var(--gold);}
+  h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.5px;}
+  h1 em{color:var(--gold);font-style:normal;}
+  .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .banner{font-size:11.5px;color:#ffd9b0;background:rgba(255,120,80,.10);
+    border:1px solid rgba(255,150,90,.25);padding:8px 12px;border-radius:11px;max-width:440px;line-height:1.5;}
+
+  /* Alert bar: tables that are ready to bet right now */
+  .alert{
+    background:linear-gradient(180deg,rgba(255,209,102,.14),rgba(255,209,102,.04));
+    border:1px solid rgba(255,209,102,.45);border-radius:16px;padding:14px 16px;margin-bottom:18px;
+    box-shadow:var(--shadow);
+  }
+  .alert.empty{background:var(--glass);border-color:var(--brd);}
+  .alert h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--gold);}
+  .alert.empty h2{color:var(--muted);}
+  .alert .list{display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--brd);
+    border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;transition:transform .1s;}
+  .pill:hover{transform:translateY(-1px);}
+  .pill .side{font-weight:900;}
+  .pill .side.B{color:var(--banker2);} .pill .side.P{color:var(--player2);}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .btn{border:none;border-radius:11px;padding:11px 16px;font-size:13px;font-weight:800;cursor:pointer;
+    color:#06121f;background:var(--gold);transition:filter .15s,transform .08s;}
+  .btn:hover{filter:brightness(1.08);} .btn:active{transform:translateY(2px);}
+  .btn.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--brd);}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px;}
+  .table{background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--brd);
+    border-radius:18px;padding:15px;box-shadow:var(--shadow);transition:border-color .25s,box-shadow .25s;}
+  .table.bet{border-color:rgba(255,209,102,.6);box-shadow:0 0 0 1px rgba(255,209,102,.35),var(--shadow);}
+  .table.exit{border-color:rgba(255,77,94,.55);}
+  .thead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+  .tname{font-weight:800;font-size:15px;background:transparent;border:none;color:var(--ink);width:60%;
+    border-bottom:1px dashed transparent;padding:2px 0;}
+  .tname:focus{outline:none;border-bottom-color:var(--brd);}
+  .pat{display:inline-flex;gap:4px;}
+  .pat .c{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff;}
+  .pat .c.B{background:linear-gradient(180deg,var(--banker2),var(--banker));}
+  .pat .c.P{background:linear-gradient(180deg,var(--player2),var(--player));}
+  .call{text-align:center;padding:11px;border-radius:12px;margin:6px 0 10px;border:1px solid var(--brd);
+    background:var(--panel);transition:all .2s;}
+  .call.bet{border-color:rgba(255,209,102,.5);background:linear-gradient(180deg,rgba(255,209,102,.16),rgba(255,209,102,.03));}
+  .call.exit{border-color:rgba(255,77,94,.5);background:linear-gradient(180deg,rgba(255,77,94,.15),rgba(255,77,94,.04));}
+  .call .who{font-size:20px;font-weight:900;letter-spacing:.4px;}
+  .call.bet .who{color:var(--gold);} .call.exit .who{color:var(--banker2);}
+  .call .why{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+  .row-btns{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:6px;}
+  .row-btns button{border:none;border-radius:9px;padding:11px 0;font-size:14px;font-weight:800;color:#fff;cursor:pointer;}
+  .row-btns .bk{background:linear-gradient(180deg,var(--banker2),var(--banker));}
+  .row-btns .pl{background:linear-gradient(180deg,var(--player2),var(--player));}
+  .row-btns .ti{background:linear-gradient(180deg,var(--tie2),var(--tie));}
+  .row-btns .un{background:rgba(255,255,255,.07);border:1px solid var(--brd);color:var(--ink);padding:0 12px;}
+  .marks{display:flex;flex-wrap:wrap;gap:3px;margin-top:10px;min-height:24px;}
+  .mk{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:900;border:1px solid var(--brd);}
+  .mk.chk{color:var(--tie2);background:rgba(31,209,168,.12);} .mk.x{color:var(--banker2);background:rgba(255,77,94,.12);}
+  .mk.free{color:var(--muted);background:rgba(255,255,255,.04);border-style:dashed;}
+  .beads{display:flex;flex-wrap:wrap;gap:2px;margin-top:8px;max-height:48px;overflow:hidden;}
+  .bd{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:800;color:#fff;}
+  .bd.B{background:var(--banker);} .bd.P{background:var(--player);} .bd.T{background:var(--tie);}
+  .tfoot{display:flex;justify-content:space-between;font-size:12px;margin-top:10px;color:var(--muted);}
+  .tfoot b{font-variant-numeric:tabular-nums;} .pos{color:var(--tie2);} .neg{color:var(--banker2);}
+  .x-close{background:rgba(255,77,94,.15);border:1px solid rgba(255,77,94,.3);color:var(--banker2);
+    border-radius:8px;width:26px;height:26px;cursor:pointer;font-weight:900;line-height:1;}
+  .footer{text-align:center;color:var(--muted);font-size:11px;margin-top:24px;line-height:1.6;}
+  .empty-note{color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>MULTI-TABLE <em>RAFAEL SCANNER</em></h1>
+        <div class="sub">Track many shoes at once &middot; only act on the table that signals a bet</div>
+      </div>
+    </div>
+    <div class="banner">
+      Each table is independent &mdash; ~50.68% Banker no matter the marks. This finds tables
+      matching Rafael's rules; it does <b>not</b> predict outcomes or beat the house.
+    </div>
+  </header>
+
+  <div class="alert empty" id="alert">
+    <h2 id="alertTitle">No tables ready to bet</h2>
+    <div class="list" id="alertList"></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" onclick="addTable()">+ Add table</button>
+    <button class="btn ghost" onclick="addTable(4)">+ Add 4 tables</button>
+    <button class="btn ghost" onclick="resetAll()">Reset all</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="footer">
+    For entertainment &amp; analysis only. Watching more tables means more chances to follow the system &mdash;
+    it does not change the negative expectation. Please play responsibly.
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Pure Rafael logic (identical rules to baccarat/systems.py HongKongRafael and
+// the single-table tracker.html). Takes a history array, returns the state.
+// ---------------------------------------------------------------------------
+function rafaelState(history) {
+  const nonTie = history.filter(x => x !== 'T');
+  const opp = s => (s === 'B' ? 'P' : 'B');
+
+  let pattern = null, start = 0;
+  for (let i = 0; i + 3 <= nonTie.length; i++) {
+    const w = nonTie.slice(i, i + 3);
+    if (w.includes('B') && w.includes('P')) { pattern = w; start = i + 3; break; }
+  }
+  if (!pattern) {
+    return { pattern:null, marks:[], call:null,
+             why:'Waiting for a 3-pattern with both Banker and Player.', exit:false, pl:0 };
+  }
+
+  const post = nonTie.slice(start);
+  const marks = [];
+  let exit = false, exitWhy = '', pl = 0;
+  for (let k = 0; k < post.length; k++) {
+    const pos = k % 3;
+    const isCheck = post[k] === pattern[pos];
+    if (pos !== 0 && marks.length > 0 && !exit) {
+      const prev = marks[marks.length - 1];
+      const wantCheck = prev.symReal === 'chk';
+      pl += (wantCheck === isCheck) ? 0.95 : -1;
+    }
+    marks.push({ sym: pos === 0 ? 'free' : (isCheck ? 'chk' : 'x'),
+                 realChk: isCheck, symReal: isCheck ? 'chk' : 'x' });
+    if (marks.length >= 3) {
+      const a = marks[marks.length-3].realChk, b = marks[marks.length-2].realChk, c = marks[marks.length-1].realChk;
+      if (a !== b && b !== c) { exit = true; exitWhy = 'Double-opposites detected.'; }
+    }
+    if (pl >= 3 && !exit) { exit = true; exitWhy = 'Reached +3 unit profit target.'; }
+  }
+
+  const nextPos = post.length % 3;
+  let call = null, why = '';
+  if (exit) {
+    why = exitWhy + ' Walk away from this shoe.';
+  } else if (nextPos === 0) {
+    why = 'Free hand (start of a row) — watch, do not bet.';
+  } else if (marks.length > 0) {
+    const prev = marks[marks.length - 1];
+    const wantCheck = prev.symReal === 'chk';
+    const side = wantCheck ? pattern[nextPos] : opp(pattern[nextPos]);
+    call = side;
+    why = `Follow last ${wantCheck ? '✓' : '✗'} → bet for a ${wantCheck ? 'Check' : 'X'} (pos ${nextPos+1} = ${pattern[nextPos]}).`;
+  }
+  return { pattern, marks, call, why, exit, pl };
+}
+
+function sideName(s){ return s === 'B' ? 'BANKER' : s === 'P' ? 'PLAYER' : 'TIE'; }
+
+// ---------------------------------------------------------------------------
+// Table state (persisted to localStorage so a refresh doesn't lose your shoes)
+// ---------------------------------------------------------------------------
+let tables = load();
+let nextId = tables.reduce((m,t) => Math.max(m, t.id), 0) + 1;
+
+function load() {
+  try {
+    const raw = localStorage.getItem('rafael_tables');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return [{ id:1, name:'Table 1', history:[] }];
+}
+function save() { try { localStorage.setItem('rafael_tables', JSON.stringify(tables)); } catch(e){} }
+
+function addTable(n = 1) {
+  for (let i = 0; i < n; i++) tables.push({ id: nextId, name: 'Table ' + nextId, history: [] }), nextId++;
+  save(); render();
+}
+function removeTable(id) { tables = tables.filter(t => t.id !== id); save(); render(); }
+function resetAll() {
+  if (!confirm('Clear all tables and their histories?')) return;
+  tables = [{ id:1, name:'Table 1', history:[] }]; nextId = 2; save(); render();
+}
+function addResult(id, r) { const t = tables.find(t=>t.id===id); if(t){ t.history.push(r); save(); render(); } }
+function undoResult(id) { const t = tables.find(t=>t.id===id); if(t){ t.history.pop(); save(); render(); } }
+function renameTable(id, val) { const t = tables.find(t=>t.id===id); if(t){ t.name = val; save(); } }
+
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
+function render() {
+  // Alert bar: which tables are signalling a bet right now.
+  const ready = tables.map(t => ({ t, st: rafaelState(t.history) }))
+                      .filter(o => o.st.call && !o.st.exit);
+  const alert = document.getElementById('alert');
+  const title = document.getElementById('alertTitle');
+  const list = document.getElementById('alertList');
+  if (ready.length) {
+    alert.className = 'alert';
+    title.textContent = `${ready.length} table${ready.length>1?'s':''} ready to bet`;
+    list.innerHTML = ready.map(o =>
+      `<span class="pill" onclick="document.getElementById('tbl${o.t.id}').scrollIntoView({behavior:'smooth',block:'center'})">
+        ${escapeHtml(o.t.name)} <span class="side ${o.st.call}">${sideName(o.st.call)}</span></span>`
+    ).join('');
+  } else {
+    alert.className = 'alert empty';
+    title.textContent = 'No tables ready to bet';
+    list.innerHTML = '<span class="empty-note">Log results below. A table lights up here when Rafael says to bet.</span>';
+  }
+
+  // Table cards.
+  const grid = document.getElementById('grid');
+  grid.innerHTML = tables.map(t => cardHtml(t, rafaelState(t.history))).join('');
+}
+
+function cardHtml(t, st) {
+  const cls = st.exit ? 'exit' : (st.call ? 'bet' : '');
+  const pat = st.pattern
+    ? '<span class="pat">' + st.pattern.map(s=>`<span class="c ${s}">${s}</span>`).join('') + '</span>'
+    : '<span class="empty-note">pattern not set</span>';
+  let who, callCls;
+  if (st.exit) { who = 'EXIT SHOE'; callCls = 'exit'; }
+  else if (st.call) { who = 'BET ' + sideName(st.call); callCls = 'bet'; }
+  else { who = (st.pattern && st.marks.length % 3 === 0) ? 'FREE HAND' : 'WAIT'; callCls = ''; }
+
+  const marks = st.marks.length
+    ? st.marks.map(m => m.sym==='free' ? `<div class="mk free">·</div>`
+        : m.sym==='chk' ? `<div class="mk chk">✓</div>` : `<div class="mk x">✗</div>`).join('')
+    : '<span class="empty-note">no marks yet</span>';
+
+  const recent = t.history.slice(-14);
+  const beads = recent.map(r => `<div class="bd ${r}">${r}</div>`).join('');
+
+  const plCls = st.pl >= 0 ? 'pos' : 'neg';
+  return `
+  <div class="table ${cls}" id="tbl${t.id}">
+    <div class="thead">
+      <input class="tname" value="${escapeHtml(t.name)}" onchange="renameTable(${t.id}, this.value)" />
+      <div style="display:flex;align-items:center;gap:8px;">${pat}
+        <button class="x-close" title="remove table" onclick="removeTable(${t.id})">×</button></div>
+    </div>
+    <div class="call ${callCls}">
+      <div class="who">${who}</div>
+      <div class="why">${st.why || '&nbsp;'}</div>
+    </div>
+    <div class="row-btns">
+      <button class="bk" onclick="addResult(${t.id},'B')">B</button>
+      <button class="pl" onclick="addResult(${t.id},'P')">P</button>
+      <button class="ti" onclick="addResult(${t.id},'T')">T</button>
+      <button class="un" onclick="undoResult(${t.id})">↶</button>
+    </div>
+    <div class="beads">${beads || '<span class="empty-note">no results yet</span>'}</div>
+    <div class="marks">${marks}</div>
+    <div class="tfoot"><span>Hands: ${t.history.length}</span><span>Strategy P/L: <b class="${plCls}">${(st.pl>=0?'+':'')+st.pl.toFixed(2)}</b></span></div>
+  </div>`;
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+render();
+</script>
+</body>
+</html>
